@@ -44,7 +44,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const HomePage = ({ title }) => {
+const HomePage = () => {
   const classes = useStyles();
   const redirect = useRedirect();
   const { data: identity, isLoading } = useGetIdentity();
@@ -63,7 +63,7 @@ const HomePage = ({ title }) => {
       <Box className={classes.root}>
         <AppIcon className={classes.logo} />
         <Typography variant="h4" className={classes.title}>
-          {title}
+          {process.env.REACT_APP_NAME}
         </Typography>
         <Typography align="center" className={classes.description}>
           {process.env.REACT_APP_DESCRIPTION}
