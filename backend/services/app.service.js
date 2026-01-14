@@ -23,27 +23,33 @@ module.exports = {
       required: [
         {
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/maid/Offer'),
-          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+          accessMode: ['acl:Read', 'acl:Write', 'acl:Control'],
+          preferredScope: 'interop:AllFromRegistry'
         },
         {
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/maid/Request'),
-          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+          accessMode: ['acl:Read', 'acl:Write', 'acl:Control'],
+          preferredScope: 'interop:AllFromRegistry'
         },
         {
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
-          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+          accessMode: ['acl:Read', 'acl:Write', 'acl:Control'],
+          preferredScope: 'interop:AllFromRegistry'
         },
         {
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile'),
-          accessMode: 'acl:Read'
+          accessMode: 'acl:Read',
+          preferredScope: 'interop:AllFromRegistry'
         },
         {
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Group'),
-          accessMode: 'acl:Read'
+          accessMode: 'acl:Read',
+          preferredScope: 'interop:AllFromRegistry'
         },
         {
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/File'),
-          accessMode: ['acl:Read', 'acl:Write']
+          accessMode: ['acl:Read', 'acl:Write'],
+          preferredScope: 'interop:AllFromRegistry'
         },
         'apods:ReadInbox',
         'apods:ReadOutbox',
