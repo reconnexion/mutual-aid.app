@@ -41,14 +41,9 @@ const LikeButton = ({ annonce }: Props) => {
   };
 
   return (
-    <Button
-      type="text"
-      icon={liked ? <HeartFilled style={{ color: '#cf1322' }} /> : <HeartOutlined />}
-      onClick={toggle}
-      loading={pending}
-      disabled={isLoading}
-    >
-      {likes.length > 0 ? likes.length : ''}
+    <Button type="text" size="small" onClick={toggle} loading={pending} disabled={isLoading}>
+      {likes.length > 0 && <span style={{ marginRight: 4 }}>{likes.length}</span>}
+      {liked ? <HeartFilled style={{ color: '#cf1322' }} /> : <HeartOutlined />}
     </Button>
   );
 };

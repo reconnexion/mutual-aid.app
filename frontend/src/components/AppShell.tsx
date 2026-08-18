@@ -6,10 +6,11 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import AnnonceComposer from './AnnonceComposer';
 import UserMenu from './UserMenu';
-import ComposerContext from '../context/ComposerContext';
+import ComposerContext, { type ComposerRequest } from '../context/ComposerContext';
 import useAnnonces from '../hooks/useAnnonces';
 import { FILTER_ROWS, matchesFilter, type FilterId } from '../config/filters';
 import { APP_NAME } from '../config/env';
+import { HEADER_HEIGHT } from '../config/layout';
 import type { Identity } from '../types';
 
 const { Sider, Content } = Layout;
@@ -19,7 +20,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   const { data: identity } = useGetIdentity<Identity>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [composerOpen, setComposerOpen] = useState(false);
+  const [composerRequest, setComposerRequest] = useState<ComposerRequest | null>(null);
   const { items } = useAnnonces();
 
   const activeFilter = (searchParams.get('filter') as FilterId) || 'all';
@@ -28,19 +29,24 @@ const AppShell = ({ children }: { children: ReactNode }) => {
 
   const selectFilter = (id: FilterId) => navigate({ pathname: '/annonces', search: id === 'all' ? '' : `?filter=${id}` });
 
+  const openComposer = (request?: Partial<ComposerRequest>) =>
+    setComposerRequest({ mode: 'create', kind: 'offer', ...request });
+
   return (
-    <ComposerContext.Provider value={{ openComposer: () => setComposerOpen(true) }}>
+    <ComposerContext.Provider value={{ openComposer }}>
       <Layout style={{ minHeight: '100vh' }}>
         <Sider width={360} theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
           <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <div
               style={{
-                flex: '0 0 auto',
+                flex: `0 0 ${HEADER_HEIGHT}px`,
+                height: HEADER_HEIGHT,
+                boxSizing: 'border-box',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 12,
-                padding: '14px 16px',
+                padding: '0 16px',
                 background: '#1677ff'
               }}
             >
@@ -85,14 +91,22 @@ const AppShell = ({ children }: { children: ReactNode }) => {
             </div>
 
             <div style={{ flex: '0 0 auto', padding: 16 }}>
-              <Button type="primary" icon={<PlusOutlined />} block onClick={() => setComposerOpen(true)}>
+              <Button type="primary" icon={<PlusOutlined />} block onClick={() => openComposer()}>
                 Créer une annonce
               </Button>
             </div>
           </div>
         </Sider>
         <Content style={{ background: '#f5f5f5', height: '100vh', overflow: 'hidden' }}>{children}</Content>
-        <AnnonceComposer open={composerOpen} mode="create" kind="offer" onClose={() => setComposerOpen(false)} />
+        {composerRequest && (
+          <AnnonceComposer
+            open
+            mode={composerRequest.mode}
+            kind={composerRequest.kind}
+            annonce={composerRequest.annonce}
+            onClose={() => setComposerRequest(null)}
+          />
+        )}
       </Layout>
     </ComposerContext.Provider>
   );

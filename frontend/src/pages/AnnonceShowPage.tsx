@@ -1,23 +1,21 @@
 import { useState } from 'react';
-import { Button, Input, Result, Space, Spin, Typography } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
-import { useGetIdentity, useOne } from '@refinedev/core';
+import { Button, Input, Result, Spin, Typography } from 'antd';
+import { ArrowLeftOutlined, SendOutlined } from '@ant-design/icons';
+import { useOne } from '@refinedev/core';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import AnnonceCard from '../components/AnnonceCard';
-import AnnonceComposer from '../components/AnnonceComposer';
 import CommentList from '../components/CommentList';
 import useActorProfile from '../hooks/useActorProfile';
 import useComments from '../hooks/useComments';
-import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
+import { HEADER_HEIGHT } from '../config/layout';
+import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Title } = Typography;
 
 const AnnonceShowPage = () => {
   const { kind, id } = useParams<{ kind: AnnonceKind; id: string }>();
   const navigate = useNavigate();
-  const { data: identity } = useGetIdentity<Identity>();
-  const [composerMode, setComposerMode] = useState<'edit' | 'share' | null>(null);
   const [draft, setDraft] = useState('');
 
   const { result: annonce, query } = useOne<AnnonceRecord>({
@@ -31,8 +29,6 @@ const AnnonceShowPage = () => {
   if (query.isLoading) return <Spin style={{ margin: 48 }} />;
   if (!annonce) return <Result status="404" title="Annonce introuvable" extra={<Link to="/annonces">Retour</Link>} />;
 
-  const mine = annonce['dc:creator'] === identity?.id;
-
   const submitComment = async () => {
     const content = draft;
     setDraft('');
@@ -44,7 +40,19 @@ const AnnonceShowPage = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
+      <div
+        style={{
+          flex: `0 0 ${HEADER_HEIGHT}px`,
+          height: HEADER_HEIGHT,
+          boxSizing: 'border-box',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '0 16px',
+          background: '#fff',
+          borderBottom: '1px solid #f0f0f0'
+        }}
+      >
         <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
         <Title level={5} style={{ margin: 0 }}>
           Annonce de {author?.['vcard:given-name'] || 'Voisin·e'}
@@ -53,16 +61,6 @@ const AnnonceShowPage = () => {
 
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <AnnonceCard annonce={annonce} kind={kind!} />
-        {mine && (
-          <Space>
-            <Button icon={<EditOutlined />} onClick={() => setComposerMode('edit')}>
-              Modifier
-            </Button>
-            <Button icon={<ShareAltOutlined />} onClick={() => setComposerMode('share')}>
-              Partager
-            </Button>
-          </Space>
-        )}
         <CommentList replies={replies} isLoading={repliesLoading} />
       </div>
 
@@ -76,17 +74,6 @@ const AnnonceShowPage = () => {
         />
         <Button type="primary" shape="circle" icon={<SendOutlined />} onClick={submitComment} loading={sending} />
       </div>
-
-      {composerMode && (
-        <AnnonceComposer
-          open
-          mode={composerMode}
-          kind={kind!}
-          annonce={annonce}
-          onClose={() => setComposerMode(null)}
-          onSaved={() => query.refetch()}
-        />
-      )}
     </div>
   );
 };

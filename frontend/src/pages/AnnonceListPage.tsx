@@ -1,4 +1,4 @@
-import { Empty, Spin, Typography } from 'antd';
+import { Button, Empty, Spin, Typography } from 'antd';
 import { useGetIdentity } from '@refinedev/core';
 import { useSearchParams } from 'react-router';
 
@@ -6,6 +6,7 @@ import AnnonceCard from '../components/AnnonceCard';
 import { useComposer } from '../context/ComposerContext';
 import useAnnonces from '../hooks/useAnnonces';
 import { FILTER_TITLES, matchesFilter, type FilterId } from '../config/filters';
+import { HEADER_HEIGHT } from '../config/layout';
 import type { Identity } from '../types';
 
 const { Title, Text } = Typography;
@@ -23,11 +24,23 @@ const AnnonceListPage = () => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: '0 0 auto', padding: '16px 24px', background: '#fff', borderBottom: '1px solid #f0f0f0' }}>
-        <Title level={4} style={{ margin: 0 }}>
+      <div
+        style={{
+          flex: `0 0 ${HEADER_HEIGHT}px`,
+          height: HEADER_HEIGHT,
+          boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '0 24px',
+          background: '#fff',
+          borderBottom: '1px solid #f0f0f0'
+        }}
+      >
+        <Title level={4} style={{ margin: 0, lineHeight: '26px' }}>
           {FILTER_TITLES[filter]}
         </Title>
-        <Text type="secondary">
+        <Text type="secondary" style={{ fontSize: 12 }}>
           {filtered.length} annonce{filtered.length !== 1 ? 's' : ''}
           {filter === 'mine' ? ' créée par vous' : ' partagée avec vous'}
         </Text>
@@ -43,18 +56,13 @@ const AnnonceListPage = () => {
         )}
       </div>
 
-      <div
-        onClick={openComposer}
-        style={{
-          flex: '0 0 auto',
-          padding: '12px 16px',
-          background: '#fff',
-          borderTop: '1px solid #f0f0f0',
-          color: 'rgba(0,0,0,0.45)',
-          cursor: 'pointer'
-        }}
-      >
-        Créer une nouvelle annonce
+      <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>
+        <div onClick={() => openComposer()} style={{ flex: 1, minWidth: 0, color: 'rgba(0,0,0,0.45)', cursor: 'pointer' }}>
+          Créer une nouvelle annonce
+        </div>
+        <Button type="primary" shape="round" onClick={() => openComposer()}>
+          Envoyer
+        </Button>
       </div>
     </div>
   );

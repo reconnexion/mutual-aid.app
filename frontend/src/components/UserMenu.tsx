@@ -1,7 +1,6 @@
 import { useGetIdentity } from '@refinedev/core';
 import { Avatar, Dropdown, Space } from 'antd';
 import { AppstoreOutlined, DatabaseOutlined, LogoutOutlined, SettingOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
-import { Link } from 'react-router';
 
 import useNodeinfo from '../hooks/useNodeinfo';
 import urlJoin from '../utils/urlJoin';
@@ -9,8 +8,8 @@ import { authProvider } from '../providers';
 import type { Identity } from '../types';
 
 /** Avatar + name dropdown, matching welcometomyplace's `UserMenu`: links to the Pod provider's
- *  own network/apps/data/settings pages (discovered via nodeinfo) plus this app's profile page
- *  and logout — the single entry point for account-level actions. */
+ *  own network/apps/data/settings pages (discovered via nodeinfo) plus logout — the single
+ *  entry point for account-level actions. */
 const UserMenu = () => {
   const { data: identity, isLoading } = useGetIdentity<Identity>();
   const { data: nodeinfo } = useNodeinfo(identity?.id ? new URL(identity.id).host : undefined);
@@ -32,11 +31,6 @@ const UserMenu = () => {
     <Dropdown
       menu={{
         items: [
-          {
-            key: 'profile',
-            label: <Link to={`/profil/${encodeURIComponent(identity.id)}`}>Mon profil</Link>,
-            icon: <UserOutlined />
-          },
           ...(frontendUrl
             ? [
                 {

@@ -1,13 +1,15 @@
-import { Avatar, Space, Tag, Typography } from 'antd';
-import { CommentOutlined, UserOutlined } from '@ant-design/icons';
+import { Avatar, Button, Space, Tag, Typography } from 'antd';
+import { CommentOutlined, EditOutlined, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
+import { useGetIdentity } from '@refinedev/core';
 import { Link } from 'react-router';
 import dayjs from 'dayjs';
 
 import LikeButton from './LikeButton';
 import useActorProfile from '../hooks/useActorProfile';
 import useActivityCollection from '../hooks/useActivityCollection';
+import { useComposer } from '../context/ComposerContext';
 import { literalValue, resourceTypeCurie } from '../utils/ontology';
-import type { AnnonceKind, AnnonceRecord } from '../types';
+import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
 
 const { Paragraph, Text } = Typography;
 
@@ -40,11 +42,15 @@ type Props = {
 /** A chat-bubble-style card, matching the mockup: the avatar sits beside the bubble (not inside
  *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message. */
 const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
+  const { data: identity } = useGetIdentity<Identity>();
   const { data: author } = useActorProfile(annonce['dc:creator']);
   const { items: replies } = useActivityCollection(annonce.replies);
+  const { items: sharedWith } = useActivityCollection<string>(annonce['apods:announces']);
+  const { openComposer } = useComposer();
   const place = annonce.location;
   const resourceType = resourceTypeOf(annonce, kind);
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
+  const mine = annonce['dc:creator'] === identity?.id;
 
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%', maxWidth: 640 }}>
@@ -62,7 +68,9 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
       >
         <div style={{ padding: '10px 14px 8px' }}>
           <Space size={8} wrap style={{ marginBottom: 4 }}>
-            <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
+            <Link to={`/profil/${encodeURIComponent(annonce['dc:creator'])}`}>
+              <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
+            </Link>
             <Text type="secondary" style={{ fontSize: 12 }}>
               {place?.name}
               {place?.radius ? ` · ${place.radius} km` : ''}
@@ -93,18 +101,38 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
             <Text type="secondary">{annonce['dc:created'] ? dayjs(annonce['dc:created']).format('D MMM à HH:mm') : ''}</Text>
           </Space>
         </div>
+
+        {mine && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '8px 14px',
+              borderTop: '1px solid #f0f0f0',
+              background: '#fafafa'
+            }}
+          >
+            <Text type="secondary" style={{ flex: 1, minWidth: 0, fontSize: 12 }}>
+              Partagé avec {sharedWith.length} personne{sharedWith.length !== 1 ? 's' : ''}
+            </Text>
+            <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
+              Modifier
+            </Button>
+            <Button size="small" icon={<ShareAltOutlined />} onClick={() => openComposer({ mode: 'share', kind, annonce })}>
+              Partager
+            </Button>
+          </div>
+        )}
+
         {showFooter && (
-          <div style={{ display: 'flex', borderTop: '1px solid #f0f0f0' }}>
-            <Link to={detailUrl} style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '8px 0', color: '#1677ff' }}>
-                <CommentOutlined />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Link to={detailUrl}>
+              <Button type="text" size="small" icon={<CommentOutlined />}>
                 {replies.length > 0 ? `${replies.length} commentaire${replies.length > 1 ? 's' : ''}` : 'Commenter'}
-              </div>
+              </Button>
             </Link>
-            <div style={{ width: 1, background: '#f0f0f0' }} />
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-              <LikeButton annonce={annonce} />
-            </div>
+            <LikeButton annonce={annonce} />
           </div>
         )}
       </div>

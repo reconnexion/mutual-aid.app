@@ -1,5 +1,6 @@
-import { Alert, Avatar, Space, Typography } from 'antd';
+import { Alert, Avatar, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
+import { Link } from 'react-router';
 import dayjs from 'dayjs';
 
 import useActorProfile from '../hooks/useActorProfile';
@@ -10,19 +11,30 @@ const { Text } = Typography;
 const Comment = ({ reply }: { reply: ReplyRecord }) => {
   const { data: author } = useActorProfile(reply.attributedTo);
   return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-      <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} size="small" style={{ flex: '0 0 auto' }} />
-      <div style={{ maxWidth: 480, background: '#fff', border: '1px solid #f0f0f0', borderRadius: '2px 8px 8px 8px', padding: '8px 12px' }}>
-        <Space size={8}>
-          <Text strong style={{ fontSize: 13 }}>
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', justifyContent: 'flex-end' }}>
+      <div
+        style={{
+          maxWidth: 480,
+          background: '#e6f4ff',
+          border: '1px solid #bae0ff',
+          borderRadius: '8px 2px 8px 8px',
+          padding: '8px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2
+        }}
+      >
+        <Link to={`/profil/${encodeURIComponent(reply.attributedTo || '')}`}>
+          <Text strong style={{ fontSize: 13, color: '#0958d9' }}>
             {author?.['vcard:given-name'] || 'Voisin·e'}
           </Text>
-          <Text type="secondary" style={{ fontSize: 11 }}>
-            {reply.published ? dayjs(reply.published).format('D MMM à HH:mm') : ''}
-          </Text>
-        </Space>
+        </Link>
         <div style={{ whiteSpace: 'pre-wrap' }}>{reply.content}</div>
+        <Text type="secondary" style={{ fontSize: 11, alignSelf: 'flex-end' }}>
+          {reply['dc:created'] ? dayjs(reply['dc:created']).format('D MMM à HH:mm') : ''}
+        </Text>
       </div>
+      <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} size="small" style={{ flex: '0 0 auto' }} />
     </div>
   );
 };

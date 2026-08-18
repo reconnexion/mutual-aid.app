@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { App, Button, Form, Input, InputNumber, Modal, Segmented, Slider, Space, Switch } from 'antd';
+import { App, Button, Form, Input, InputNumber, Modal, Segmented, Slider, Space } from 'antd';
 import { useCreate, useInvalidate, useList, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
@@ -34,7 +34,6 @@ type FormValues = {
   locationId?: string;
   radius: number;
   expiryDays: number;
-  noExpiry: boolean;
   image?: string;
 };
 
@@ -76,13 +75,12 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
         content: annonce.content,
         resourceType: resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]]),
         radius,
-        noExpiry: !expirationDate,
         expiryDays: expirationDate ? Math.max(1, dayjs(expirationDate).diff(dayjs(), 'day')) : 30,
         image: annonce['pair:depictedBy']
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ resourceType: 'pair:AtomBasedResource', radius: 15, noExpiry: false, expiryDays: 30 });
+      form.setFieldsValue({ resourceType: 'pair:AtomBasedResource', radius: 15, expiryDays: 30 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, annonce, mode]);
@@ -122,7 +120,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
           location,
           'pair:depictedBy': values.image,
           [RESOURCE_TYPE_PREDICATE[kind]]: values.resourceType,
-          'maid:expirationDate': values.noExpiry ? undefined : dayjs().add(values.expiryDays, 'day').toISOString()
+          'maid:expirationDate': dayjs().add(values.expiryDays, 'day').toISOString()
         };
 
         if (mode === 'create') {
@@ -185,8 +183,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
     >
       <div style={{ display: step === 1 ? 'block' : 'none' }}>
         <Form form={form} layout="vertical">
-          {mode === 'create' && (
-            <Form.Item label="Type d'annonce">
+          <Space size={8} style={{ marginBottom: 24 }} wrap>
+            {mode === 'create' && (
               <Segmented
                 value={kind}
                 onChange={value => setKind(value as AnnonceKind)}
@@ -195,16 +193,16 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
                   { label: 'Demande', value: 'request' }
                 ]}
               />
+            )}
+            <Form.Item name="resourceType" noStyle>
+              <Segmented
+                options={[
+                  { label: 'Matériel', value: 'pair:AtomBasedResource' },
+                  { label: 'Compétence', value: 'pair:HumanBasedResource' }
+                ]}
+              />
             </Form.Item>
-          )}
-          <Form.Item name="resourceType" label="Catégorie">
-            <Segmented
-              options={[
-                { label: 'Matériel', value: 'pair:AtomBasedResource' },
-                { label: 'Compétence', value: 'pair:HumanBasedResource' }
-              ]}
-            />
-          </Form.Item>
+          </Space>
           <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]}>
             <Input.TextArea rows={5} placeholder="Bonjour, je cherche…" />
           </Form.Item>
@@ -222,22 +220,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
           <Form.Item name="radius" label="Rayon de diffusion">
             <Slider min={5} max={50} step={5} marks={{ 5: '5 km', 50: '50 km' }} />
           </Form.Item>
-          <Form.Item label="Date d'expiration">
-            <Space align="center">
-              <Form.Item name="noExpiry" valuePropName="checked" noStyle>
-                <Switch />
-              </Form.Item>
-              <span>Sans expiration</span>
-            </Space>
-          </Form.Item>
-          <Form.Item noStyle shouldUpdate={(prev, cur) => prev.noExpiry !== cur.noExpiry}>
-            {({ getFieldValue }) =>
-              !getFieldValue('noExpiry') && (
-                <Form.Item name="expiryDays" label="Expire dans (jours)">
-                  <InputNumber min={1} max={365} />
-                </Form.Item>
-              )
-            }
+          <Form.Item name="expiryDays" label="Expire dans (jours)" rules={[{ required: true }]}>
+            <InputNumber min={1} max={365} />
           </Form.Item>
         </Form>
       </div>

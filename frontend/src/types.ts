@@ -69,6 +69,6 @@ export type ReplyRecord = {
   id: string;
   content?: string;
   attributedTo?: string;
-  published?: string;
+  'dc:created'?: string;
   [key: string]: any;
 };
