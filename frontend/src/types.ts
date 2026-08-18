@@ -31,8 +31,9 @@ export type AnnonceRecord = {
   'maid:requestOfResourceType'?: 'pair:AtomBasedResource' | 'pair:HumanBasedResource';
   /** Optional expiration date; absent means the ad never expires. */
   'maid:expirationDate'?: string;
-  /** Optional single illustration image. */
-  'pair:depictedBy'?: string;
+  /** Up to 10 photos — read with `imagesOf()` from `utils/ontology`, since a single value comes
+   *  back bare rather than as a 1-element array. */
+  'pair:depictedBy'?: string | string[] | { id: string } | { id: string }[];
   'dc:creator': string;
   'dc:created'?: string;
   /** `as:replies` collection URI — present once at least one comment exists. */

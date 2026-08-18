@@ -65,7 +65,7 @@ const AnnonceShowPage = () => {
         <CommentList replies={replies} isLoading={repliesLoading} annonceCreator={annonce['dc:creator']} />
       </div>
 
-      <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>
+      <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px' }}>
         <Input
           value={draft}
           onChange={e => setDraft(e.target.value)}

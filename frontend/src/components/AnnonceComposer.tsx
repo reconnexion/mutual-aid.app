@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { App, Button, Form, Input, InputNumber, Modal, Segmented, Slider, Space } from 'antd';
-import { useCreate, useInvalidate, useList, useUpdate } from '@refinedev/core';
+import { App, Button, Form, Input, InputNumber, Modal, Popconfirm, Segmented, Slider, Space } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
+import { useCreate, useDelete, useInvalidate, useList, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
 import ImageUpload from './ImageUpload';
@@ -8,7 +9,7 @@ import LocationSelect from './LocationSelect';
 import RecipientPicker from './RecipientPicker';
 import useActivityCollection from '../hooks/useActivityCollection';
 import useOutbox from '../hooks/useOutbox';
-import { literalValue, resourceTypeCurie } from '../utils/ontology';
+import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
 import type { AnnonceKind, AnnonceRecord, LocationRecord } from '../types';
 
 export type ComposerMode = 'create' | 'edit' | 'share';
@@ -37,7 +38,7 @@ type FormValues = {
   locationId?: string;
   radius: number;
   expiryDays: number;
-  image?: string;
+  images?: string[];
 };
 
 const asPlace = (location: LocationRecord, radius: number) => ({
@@ -48,8 +49,8 @@ const asPlace = (location: LocationRecord, radius: number) => ({
   radius
 });
 
-/** 2-step ad composer, matching the mockup: step 1 is the ad's content, step 2 picks who it's
- *  shared with (an `Announce` per selected contact — the Pod handles visibility from there). */
+/** Ad composer, matching the mockup: `create` is 2 steps (content, then who to share it with);
+ *  `edit` and `share` are each a single step (either just the content, or just the recipients). */
 const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialContent, onClose, onSaved }: Props) => {
   const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
@@ -57,9 +58,11 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
   const [step, setStep] = useState<1 | 2>(mode === 'share' ? 2 : 1);
   const [selected, setSelected] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { mutateAsync: createAnnonce } = useCreate();
   const { mutateAsync: updateAnnonce } = useUpdate();
+  const { mutateAsync: deleteAnnonce } = useDelete();
   const outbox = useOutbox();
   const invalidate = useInvalidate();
 
@@ -79,7 +82,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
         resourceType: resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]]),
         radius,
         expiryDays: expirationDate ? Math.max(1, dayjs(expirationDate).diff(dayjs(), 'day')) : 30,
-        image: annonce['pair:depictedBy']
+        images: imagesOf(annonce['pair:depictedBy'])
       });
     } else {
       form.resetFields();
@@ -97,9 +100,11 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
     if (home) form.setFieldValue('locationId', home.id);
   }, [open, mode, locations.data, form]);
 
+  const isMultiStep = mode === 'create';
   const heading = mode === 'edit' ? "Modifier l'annonce" : mode === 'share' ? "Partager l'annonce" : 'Créer une annonce';
-  const stepLabel =
-    mode === 'share' ? 'Destinataires' : step === 1 ? "Étape 1 sur 2 · Contenu de l'annonce" : 'Étape 2 sur 2 · Destinataires';
+  const stepLabel = mode === 'share' ? 'Destinataires' : isMultiStep ? (step === 1 ? "Étape 1 sur 2 · Contenu de l'annonce" : 'Étape 2 sur 2 · Destinataires') : undefined;
+
+  const resourceUri = kind === 'offer' ? 'offer' : 'request';
 
   const goNext = async () => {
     if (step === 1) {
@@ -121,16 +126,16 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
         const variables: Record<string, any> = {
           content: values.content,
           location,
-          'pair:depictedBy': values.image,
+          'pair:depictedBy': values.images,
           [RESOURCE_TYPE_PREDICATE[kind]]: values.resourceType,
           'maid:expirationDate': dayjs().add(values.expiryDays, 'day').toISOString()
         };
 
         if (mode === 'create') {
-          const { data } = await createAnnonce({ resource: kind === 'offer' ? 'offer' : 'request', values: variables });
+          const { data } = await createAnnonce({ resource: resourceUri, values: variables });
           annonceId = data?.id as string;
         } else if (mode === 'edit' && annonce) {
-          await updateAnnonce({ resource: kind === 'offer' ? 'offer' : 'request', id: annonce.id, values: variables });
+          await updateAnnonce({ resource: resourceUri, id: annonce.id, values: variables });
         }
       }
 
@@ -144,7 +149,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
         });
       }
 
-      invalidate({ resource: kind === 'offer' ? 'offer' : 'request', invalidates: ['list', 'detail'] });
+      invalidate({ resource: resourceUri, invalidates: ['list', 'detail'] });
       message.success(mode === 'create' ? 'Annonce publiée' : mode === 'edit' ? 'Annonce mise à jour' : 'Annonce partagée');
       onSaved?.();
       onClose();
@@ -154,12 +159,27 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
     setSubmitting(false);
   };
 
-  const primaryLabel = mode !== 'share' && step === 1 ? 'Suivant : destinataires' : mode === 'create' ? 'Envoyer' : 'Enregistrer';
-  const onPrimary = mode !== 'share' && step === 1 ? goNext : submit;
+  const deleteAd = async () => {
+    if (!annonce) return;
+    setDeleting(true);
+    try {
+      await deleteAnnonce({ resource: resourceUri, id: annonce.id });
+      invalidate({ resource: resourceUri, invalidates: ['list'] });
+      message.success('Annonce supprimée');
+      onSaved?.();
+      onClose();
+    } catch (e: any) {
+      message.error(e.message);
+    }
+    setDeleting(false);
+  };
 
-  const secondaryLabel = mode !== 'share' && step === 2 ? 'Retour' : 'Annuler';
+  const primaryLabel = isMultiStep && step === 1 ? 'Suivant : destinataires' : mode === 'create' ? 'Envoyer' : 'Enregistrer';
+  const onPrimary = isMultiStep && step === 1 ? goNext : submit;
+
+  const secondaryLabel = isMultiStep && step === 2 ? 'Retour' : 'Annuler';
   const onSecondary = () => {
-    if (mode !== 'share' && step === 2) setStep(1);
+    if (isMultiStep && step === 2) setStep(1);
     else onClose();
   };
 
@@ -170,16 +190,27 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
       title={
         <div>
           <div>{heading}</div>
-          <div style={{ fontSize: 12, fontWeight: 400, color: 'rgba(0,0,0,0.45)' }}>{stepLabel}</div>
+          {stepLabel && <div style={{ fontSize: 12, fontWeight: 400, color: 'rgba(0,0,0,0.45)' }}>{stepLabel}</div>}
         </div>
       }
       footer={
-        <Space>
-          <Button onClick={onSecondary}>{secondaryLabel}</Button>
-          <Button type="primary" onClick={onPrimary} loading={submitting}>
-            {primaryLabel}
-          </Button>
-        </Space>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>
+            {mode === 'edit' && (
+              <Popconfirm title="Supprimer cette annonce ?" okText="Supprimer" cancelText="Annuler" okButtonProps={{ danger: true }} onConfirm={deleteAd}>
+                <Button danger icon={<DeleteOutlined />} loading={deleting}>
+                  Supprimer
+                </Button>
+              </Popconfirm>
+            )}
+          </div>
+          <Space>
+            <Button onClick={onSecondary}>{secondaryLabel}</Button>
+            <Button type="primary" onClick={onPrimary} loading={submitting}>
+              {primaryLabel}
+            </Button>
+          </Space>
+        </div>
       }
       width={560}
       destroyOnHidden
@@ -197,27 +228,24 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
                 ]}
               />
             )}
-            <Form.Item name="resourceType" noStyle>
-              <Segmented
-                options={[
-                  { label: 'Matériel', value: 'pair:AtomBasedResource' },
-                  { label: 'Compétence', value: 'pair:HumanBasedResource' }
-                ]}
-              />
-            </Form.Item>
+            {mode === 'create' && (
+              <Form.Item name="resourceType" noStyle>
+                <Segmented
+                  options={[
+                    { label: 'Matériel', value: 'pair:AtomBasedResource' },
+                    { label: 'Compétence', value: 'pair:HumanBasedResource' }
+                  ]}
+                />
+              </Form.Item>
+            )}
           </Space>
           <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]}>
             <Input.TextArea rows={5} placeholder="Bonjour, je cherche…" />
           </Form.Item>
-          <Form.Item name="image" label="Image (optionnel)">
+          <Form.Item name="images" label="Photos (optionnel, jusqu'à 10)">
             <ImageUpload />
           </Form.Item>
-          <Form.Item
-            name="locationId"
-            label="Localité"
-            rules={[{ required: !annonce?.location, message: 'Indiquez une localité' }]}
-            extra={annonce?.location?.name && "Laissez vide pour conserver l'adresse actuelle : " + annonce.location.name}
-          >
+          <Form.Item name="locationId" label="Localité" rules={[{ required: !annonce?.location, message: 'Indiquez une localité' }]}>
             <LocationSelect />
           </Form.Item>
           <Form.Item name="radius" label="Rayon de diffusion">

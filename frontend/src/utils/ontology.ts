@@ -19,3 +19,11 @@ export const literalValue = (value: unknown): string | undefined => {
   const wrapped = (value as { '@value'?: string } | undefined)?.['@value'];
   return typeof wrapped === 'string' ? wrapped : undefined;
 };
+
+/** `pair:depictedBy` (an ad's photos) is typed `@type: "@id"`, so — same reasoning as
+ *  `resourceTypeCurie` — each value can come back as `{ id: "<url>" }` instead of a plain URL
+ *  string, and with more than one photo the whole thing is an array rather than a single value. */
+export const imagesOf = (value: unknown): string[] => {
+  const list = value === undefined || value === null ? [] : Array.isArray(value) ? value : [value];
+  return list.map(item => (typeof item === 'string' ? item : (item as { id?: string } | undefined)?.id)).filter((url): url is string => !!url);
+};

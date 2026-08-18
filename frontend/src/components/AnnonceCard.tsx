@@ -4,12 +4,13 @@ import { useGetIdentity } from '@refinedev/core';
 import { Link } from 'react-router';
 import dayjs from 'dayjs';
 
+import ImageGallery from './ImageGallery';
 import LikeButton from './LikeButton';
 import useActorProfile from '../hooks/useActorProfile';
 import useActivityCollection from '../hooks/useActivityCollection';
 import { useComposer } from '../context/ComposerContext';
 import { AVATAR_SIZE } from '../config/layout';
-import { literalValue, resourceTypeCurie } from '../utils/ontology';
+import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
 import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
 
 const { Paragraph, Text } = Typography;
@@ -49,6 +50,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const { items: sharedWith } = useActivityCollection<string>(annonce['apods:announces']);
   const { openComposer } = useComposer();
   const place = annonce.location;
+  const images = imagesOf(annonce['pair:depictedBy']);
   const resourceType = resourceTypeOf(annonce, kind);
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
   const mine = annonce['dc:creator'] === identity?.id;
@@ -82,19 +84,14 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
             {resourceType && <Tag color="geekblue">{SUB_LABEL[resourceType] || resourceType}</Tag>}
           </div>
           <Link to={detailUrl} style={{ color: 'inherit' }}>
-            <Paragraph
-              ellipsis={showFooter ? { rows: 3 } : false}
-              style={{ whiteSpace: 'pre-wrap', marginBottom: annonce['pair:depictedBy'] ? 12 : 8 }}
-            >
+            <Paragraph ellipsis={showFooter ? { rows: 3 } : false} style={{ whiteSpace: 'pre-wrap', marginBottom: images.length ? 12 : 8 }}>
               {annonce.content}
             </Paragraph>
           </Link>
-          {annonce['pair:depictedBy'] && (
-            <img
-              src={annonce['pair:depictedBy']}
-              alt=""
-              style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8, marginBottom: 8, display: 'block' }}
-            />
+          {images.length > 0 && (
+            <div style={{ marginBottom: 8 }}>
+              <ImageGallery images={images} />
+            </div>
           )}
           <Space size={8} style={{ fontSize: 12 }}>
             <Text type="secondary">{expiryLabel(annonce)}</Text>
