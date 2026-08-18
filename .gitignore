@@ -22,6 +22,10 @@ yarn-error.log*
 
 /frontend/.yalc
 /frontend/build
+/frontend/dist
+/frontend/*.tsbuildinfo
+/frontend/vite.config.js
+/frontend/vite.config.d.ts
 yalc.lock
 
 .idea
