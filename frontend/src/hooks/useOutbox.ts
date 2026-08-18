@@ -6,7 +6,8 @@ import useOwnActor from './useOwnActor';
 import urlJoin from '../utils/urlJoin';
 import { BACKEND_URL } from '../config/env';
 
-const DEFAULT_CONTEXT = ['https://www.w3.org/ns/activitystreams', urlJoin(new URL(BACKEND_URL).origin, '.well-known/context.jsonld')];
+const AS2_CONTEXT = ['https://www.w3.org/ns/activitystreams'];
+const DEFAULT_CONTEXT = [...AS2_CONTEXT, urlJoin(new URL(BACKEND_URL).origin, '.well-known/context.jsonld')];
 
 /**
  * Post ActivityStreams2 activities to the logged-in user's own outbox — the mechanism behind
@@ -19,11 +20,11 @@ const useOutbox = () => {
   const outboxUri = ownActor?.outbox;
 
   const post = useCallback(
-    async (activity: Record<string, any>) => {
+    async (activity: Record<string, any>, context: string[] = DEFAULT_CONTEXT) => {
       if (!outboxUri) throw new Error('Cannot post to outbox before the user identity is loaded');
       const { headers } = await fetchJson(
         outboxUri,
-        { method: 'POST', body: JSON.stringify({ '@context': DEFAULT_CONTEXT, ...activity }) },
+        { method: 'POST', body: JSON.stringify({ '@context': context, ...activity }) },
         session?.token
       );
       return headers.get('Location');
@@ -31,7 +32,7 @@ const useOutbox = () => {
     [outboxUri, session?.token]
   );
 
-  return { post, owner: session?.webId, url: outboxUri };
+  return { post, postPlain: (activity: Record<string, any>) => post(activity, AS2_CONTEXT), owner: session?.webId, url: outboxUri };
 };
 
 export default useOutbox;

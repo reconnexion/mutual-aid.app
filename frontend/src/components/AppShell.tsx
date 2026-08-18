@@ -104,6 +104,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
             mode={composerRequest.mode}
             kind={composerRequest.kind}
             annonce={composerRequest.annonce}
+            initialContent={composerRequest.initialContent}
             onClose={() => setComposerRequest(null)}
           />
         )}

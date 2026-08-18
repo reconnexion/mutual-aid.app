@@ -1,4 +1,6 @@
-import { Button, Empty, Spin, Typography } from 'antd';
+import { useState } from 'react';
+import { Button, Empty, Input, Spin, Typography } from 'antd';
+import { SendOutlined } from '@ant-design/icons';
 import { useGetIdentity } from '@refinedev/core';
 import { useSearchParams } from 'react-router';
 
@@ -18,9 +20,16 @@ const AnnonceListPage = () => {
   const { openComposer } = useComposer();
   const [searchParams] = useSearchParams();
   const { items, isLoading } = useAnnonces();
+  const [draft, setDraft] = useState('');
 
   const filter = (searchParams.get('filter') as FilterId) || 'all';
   const filtered = items.filter(a => matchesFilter(a, filter, identity?.id));
+
+  const startAnnonce = () => {
+    const content = draft;
+    setDraft('');
+    openComposer({ initialContent: content || undefined });
+  };
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -56,13 +65,15 @@ const AnnonceListPage = () => {
         )}
       </div>
 
-      <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>
-        <div onClick={() => openComposer()} style={{ flex: 1, minWidth: 0, color: 'rgba(0,0,0,0.45)', cursor: 'pointer' }}>
-          Créer une nouvelle annonce
-        </div>
-        <Button type="primary" shape="round" onClick={() => openComposer()}>
-          Envoyer
-        </Button>
+      <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>
+        <Input
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onPressEnter={startAnnonce}
+          placeholder="Créer une nouvelle annonce"
+          style={{ borderRadius: 18 }}
+        />
+        <Button type="primary" shape="circle" icon={<SendOutlined />} onClick={startAnnonce} />
       </div>
     </div>
   );

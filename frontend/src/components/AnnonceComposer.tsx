@@ -19,6 +19,9 @@ type Props = {
   /** For `create`: the initially selected kind (still changeable in the form). For `edit`/`share`: derived from `annonce`. */
   kind: AnnonceKind;
   annonce?: AnnonceRecord;
+  /** Pre-fills "Votre annonce" in `create` mode — e.g. text already typed into the list page's
+   *  bottom bar before the dialog was opened. */
+  initialContent?: string;
   onClose: () => void;
   onSaved?: () => void;
 };
@@ -47,7 +50,7 @@ const asPlace = (location: LocationRecord, radius: number) => ({
 
 /** 2-step ad composer, matching the mockup: step 1 is the ad's content, step 2 picks who it's
  *  shared with (an `Announce` per selected contact — the Pod handles visibility from there). */
-const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSaved }: Props) => {
+const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialContent, onClose, onSaved }: Props) => {
   const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
   const [kind, setKind] = useState<AnnonceKind>(initialKind);
@@ -80,10 +83,10 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ resourceType: 'pair:AtomBasedResource', radius: 15, expiryDays: 30 });
+      form.setFieldsValue({ content: initialContent, resourceType: 'pair:AtomBasedResource', radius: 15, expiryDays: 30 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, annonce, mode]);
+  }, [open, annonce, mode, initialContent]);
 
   // Defaults the "Localité" field to the home address once the saved-addresses list has loaded —
   // separate from the reset effect above so that adding a new address mid-composing (which also

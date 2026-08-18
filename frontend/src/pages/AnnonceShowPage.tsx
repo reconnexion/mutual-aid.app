@@ -9,6 +9,7 @@ import CommentList from '../components/CommentList';
 import useActorProfile from '../hooks/useActorProfile';
 import useComments from '../hooks/useComments';
 import { HEADER_HEIGHT } from '../config/layout';
+import { retryRefresh } from '../utils/retry';
 import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Title } = Typography;
@@ -35,7 +36,7 @@ const AnnonceShowPage = () => {
     await send(content);
     // The very first comment attaches a brand new `as:replies` collection to the annonce itself
     // — refetch it too (not just the collection), or its URI never reaches this page's state.
-    if (!annonce.replies) setTimeout(() => query.refetch(), 600);
+    if (!annonce.replies) retryRefresh(() => query.refetch());
   };
 
   return (
@@ -61,7 +62,7 @@ const AnnonceShowPage = () => {
 
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <AnnonceCard annonce={annonce} kind={kind!} />
-        <CommentList replies={replies} isLoading={repliesLoading} />
+        <CommentList replies={replies} isLoading={repliesLoading} annonceCreator={annonce['dc:creator']} />
       </div>
 
       <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px', background: '#fff', borderTop: '1px solid #f0f0f0' }}>

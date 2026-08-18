@@ -7,6 +7,9 @@ export type ComposerRequest = {
   mode: ComposerMode;
   kind: AnnonceKind;
   annonce?: AnnonceRecord;
+  /** Pre-fills the "Votre annonce" field — used by the list page's bottom bar, which lets the
+   *  user start typing before the composer dialog even opens. */
+  initialContent?: string;
 };
 
 /** Lets any page or card (the sidebar's "Créer une annonce" button, the list page's bottom bar,

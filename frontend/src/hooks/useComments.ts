@@ -3,6 +3,7 @@ import { App } from 'antd';
 
 import useActivityCollection from './useActivityCollection';
 import useOutbox from './useOutbox';
+import { retryRefresh } from '../utils/retry';
 import type { AnnonceRecord, ReplyRecord } from '../types';
 
 /** Comment state + posting for an ad, built on `as:replies` — fully managed server-side by the
@@ -23,7 +24,7 @@ const useComments = (annonce: AnnonceRecord) => {
         object: { type: 'Note', attributedTo: outbox.owner, content: content.trim(), inReplyTo: annonce.id },
         to: annonce['dc:creator']
       });
-      setTimeout(invalidate, 500);
+      retryRefresh(invalidate);
     } catch (e: any) {
       message.error(e.message);
     }

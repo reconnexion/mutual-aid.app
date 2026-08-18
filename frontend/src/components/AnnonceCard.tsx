@@ -8,6 +8,7 @@ import LikeButton from './LikeButton';
 import useActorProfile from '../hooks/useActorProfile';
 import useActivityCollection from '../hooks/useActivityCollection';
 import { useComposer } from '../context/ComposerContext';
+import { AVATAR_SIZE } from '../config/layout';
 import { literalValue, resourceTypeCurie } from '../utils/ontology';
 import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
 
@@ -54,7 +55,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
 
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%', maxWidth: 640 }}>
-      <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} style={{ flex: '0 0 auto' }} />
+      <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} size={AVATAR_SIZE} style={{ flex: '0 0 auto' }} />
       <div
         style={{
           flex: 1,
@@ -98,7 +99,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
           <Space size={8} style={{ fontSize: 12 }}>
             <Text type="secondary">{expiryLabel(annonce)}</Text>
             <Text type="secondary">·</Text>
-            <Text type="secondary">{annonce['dc:created'] ? dayjs(annonce['dc:created']).format('D MMM à HH:mm') : ''}</Text>
+            <Text type="secondary">{annonce['dc:created'] ? dayjs(annonce['dc:created']).fromNow() : ''}</Text>
           </Space>
         </div>
 
@@ -132,7 +133,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
                 {replies.length > 0 ? `${replies.length} commentaire${replies.length > 1 ? 's' : ''}` : 'Commenter'}
               </Button>
             </Link>
-            <LikeButton annonce={annonce} />
+            <LikeButton annonce={annonce} kind={kind} />
           </div>
         )}
       </div>
