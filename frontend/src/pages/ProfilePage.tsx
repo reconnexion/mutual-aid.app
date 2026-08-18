@@ -50,8 +50,8 @@ const ProfilePage = () => {
   };
 
   return (
-    <div style={{ maxWidth: 500, margin: '0 auto', padding: '24px 16px' }}>
-      <Card>
+    <div style={{ height: '100%', overflow: 'auto', padding: '24px 16px' }}>
+      <Card style={{ maxWidth: 500, margin: '0 auto' }}>
         <Space direction="vertical" align="center" style={{ width: '100%', marginBottom: 24 }}>
           <Avatar size={80} src={profile?.['vcard:photo']} icon={<UserOutlined />} />
           <Title level={4} style={{ margin: 0 }}>

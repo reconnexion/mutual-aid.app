@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { App, Button, Form, Input, InputNumber, Modal, Segmented, Slider, Space, Switch } from 'antd';
-import { useCreate, useInvalidate, useUpdate } from '@refinedev/core';
+import { useCreate, useInvalidate, useList, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
-import AddressAutocomplete from './AddressAutocomplete';
 import ImageUpload from './ImageUpload';
+import LocationSelect from './LocationSelect';
 import RecipientPicker from './RecipientPicker';
 import useActivityCollection from '../hooks/useActivityCollection';
 import useOutbox from '../hooks/useOutbox';
 import { literalValue, resourceTypeCurie } from '../utils/ontology';
-import type { AnnonceKind, AnnonceRecord, PlaceRecord } from '../types';
+import type { AnnonceKind, AnnonceRecord, LocationRecord } from '../types';
 
 export type ComposerMode = 'create' | 'edit' | 'share';
 
@@ -31,12 +31,20 @@ const RESOURCE_TYPE_PREDICATE: Record<AnnonceKind, string> = {
 type FormValues = {
   content: string;
   resourceType: 'pair:AtomBasedResource' | 'pair:HumanBasedResource';
-  location?: PlaceRecord;
+  locationId?: string;
   radius: number;
   expiryDays: number;
   noExpiry: boolean;
   image?: string;
 };
+
+const asPlace = (location: LocationRecord, radius: number) => ({
+  type: 'Place',
+  name: location['vcard:given-name'],
+  latitude: location['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:latitude'],
+  longitude: location['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:longitude'],
+  radius
+});
 
 /** 2-step ad composer, matching the mockup: step 1 is the ad's content, step 2 picks who it's
  *  shared with (an `Announce` per selected contact — the Pod handles visibility from there). */
@@ -54,6 +62,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
   const invalidate = useInvalidate();
 
   const { items: alreadyShared } = useActivityCollection<string>(mode !== 'create' ? annonce?.['apods:announces'] : undefined);
+  const { result: locations } = useList<LocationRecord>({ resource: 'location', pagination: { mode: 'off' } });
 
   useEffect(() => {
     if (!open) return;
@@ -66,7 +75,6 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
       form.setFieldsValue({
         content: annonce.content,
         resourceType: resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]]),
-        location: annonce.location,
         radius,
         noExpiry: !expirationDate,
         expiryDays: expirationDate ? Math.max(1, dayjs(expirationDate).diff(dayjs(), 'day')) : 30,
@@ -78,6 +86,15 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, annonce, mode]);
+
+  // Defaults the "Localité" field to the home address once the saved-addresses list has loaded —
+  // separate from the reset effect above so that adding a new address mid-composing (which also
+  // changes `locations.data`) doesn't wipe fields the user has already filled in.
+  useEffect(() => {
+    if (!open || mode !== 'create' || form.getFieldValue('locationId')) return;
+    const home = locations.data.find(l => l['vcard:TYPE'] === 'home');
+    if (home) form.setFieldValue('locationId', home.id);
+  }, [open, mode, locations.data, form]);
 
   const heading = mode === 'edit' ? "Modifier l'annonce" : mode === 'share' ? "Partager l'annonce" : 'Créer une annonce';
   const stepLabel =
@@ -97,9 +114,12 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
 
       if (mode !== 'share') {
         const values = form.getFieldsValue();
+        const selectedLocation = locations.data.find(l => l.id === values.locationId);
+        const location = selectedLocation ? asPlace(selectedLocation, values.radius) : annonce?.location ? { ...annonce.location, radius: values.radius } : undefined;
+
         const variables: Record<string, any> = {
           content: values.content,
-          location: values.location ? { ...values.location, type: 'Place', radius: values.radius } : undefined,
+          location,
           'pair:depictedBy': values.image,
           [RESOURCE_TYPE_PREDICATE[kind]]: values.resourceType,
           'maid:expirationDate': values.noExpiry ? undefined : dayjs().add(values.expiryDays, 'day').toISOString()
@@ -191,8 +211,13 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
           <Form.Item name="image" label="Image (optionnel)">
             <ImageUpload />
           </Form.Item>
-          <Form.Item name="location" label="Localité" rules={[{ required: true, message: 'Indiquez une localité' }]}>
-            <AddressAutocomplete />
+          <Form.Item
+            name="locationId"
+            label="Localité"
+            rules={[{ required: !annonce?.location, message: 'Indiquez une localité' }]}
+            extra={annonce?.location?.name && "Laissez vide pour conserver l'adresse actuelle : " + annonce.location.name}
+          >
+            <LocationSelect />
           </Form.Item>
           <Form.Item name="radius" label="Rayon de diffusion">
             <Slider min={5} max={50} step={5} marks={{ 5: '5 km', 50: '50 km' }} />
@@ -216,9 +241,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, onClose, onSa
           </Form.Item>
         </Form>
       </div>
-      {step === 2 && (
-        <RecipientPicker alreadyShared={alreadyShared} selected={selected} onChange={setSelected} />
-      )}
+      {step === 2 && <RecipientPicker alreadyShared={alreadyShared} selected={selected} onChange={setSelected} />}
     </Modal>
   );
 };

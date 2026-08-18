@@ -1,4 +1,4 @@
-import { Avatar, Card, Space, Tag, Typography } from 'antd';
+import { Avatar, Space, Tag, Typography } from 'antd';
 import { CommentOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router';
 import dayjs from 'dayjs';
@@ -37,6 +37,8 @@ type Props = {
   showFooter?: boolean;
 };
 
+/** A chat-bubble-style card, matching the mockup: the avatar sits beside the bubble (not inside
+ *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message. */
 const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const { data: author } = useActorProfile(annonce['dc:creator']);
   const { items: replies } = useActivityCollection(annonce.replies);
@@ -45,10 +47,20 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
 
   return (
-    <Card style={{ marginBottom: 16 }} styles={{ body: { padding: 0 } }}>
-      <div style={{ display: 'flex', gap: 12, padding: 16 }}>
-        <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} />
-        <div style={{ flex: 1, minWidth: 0 }}>
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%', maxWidth: 640 }}>
+      <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} style={{ flex: '0 0 auto' }} />
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          background: '#fff',
+          border: '1px solid #f0f0f0',
+          borderRadius: '2px 8px 8px 8px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{ padding: '10px 14px 8px' }}>
           <Space size={8} wrap style={{ marginBottom: 4 }}>
             <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
@@ -81,22 +93,22 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
             <Text type="secondary">{annonce['dc:created'] ? dayjs(annonce['dc:created']).format('D MMM à HH:mm') : ''}</Text>
           </Space>
         </div>
-      </div>
-      {showFooter && (
-        <div style={{ display: 'flex', borderTop: '1px solid #f0f0f0' }}>
-          <Link to={detailUrl} style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '8px 0', color: '#1677ff' }}>
-              <CommentOutlined />
-              {replies.length > 0 ? `${replies.length} commentaire${replies.length > 1 ? 's' : ''}` : 'Commenter'}
+        {showFooter && (
+          <div style={{ display: 'flex', borderTop: '1px solid #f0f0f0' }}>
+            <Link to={detailUrl} style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '8px 0', color: '#1677ff' }}>
+                <CommentOutlined />
+                {replies.length > 0 ? `${replies.length} commentaire${replies.length > 1 ? 's' : ''}` : 'Commenter'}
+              </div>
+            </Link>
+            <div style={{ width: 1, background: '#f0f0f0' }} />
+            <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+              <LikeButton annonce={annonce} />
             </div>
-          </Link>
-          <div style={{ width: 1, background: '#f0f0f0' }} />
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-            <LikeButton annonce={annonce} />
           </div>
-        </div>
-      )}
-    </Card>
+        )}
+      </div>
+    </div>
   );
 };
 

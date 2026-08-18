@@ -43,6 +43,12 @@ module.exports = {
           accessMode: ['acl:Read', 'acl:Write']
         },
         {
+          // The user's saved addresses (picked from in the ad composer) — a reusable resource,
+          // distinct from the embedded as:location copied onto each ad at submit time.
+          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
+          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+        },
+        {
           // Comments are posted as a `Create{Note, inReplyTo}` activity — the Pod checks the
           // activity's object type against the app's granted shape trees, so `as:Note` needs its
           // own access need even though comments aren't stored in a dedicated container.

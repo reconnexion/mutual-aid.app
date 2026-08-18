@@ -29,6 +29,9 @@ export const dataProvider = apDataProvider({
     },
     profile: {
       shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile')
+    },
+    location: {
+      shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location')
     }
   }
 });

@@ -42,6 +42,20 @@ export type AnnonceRecord = {
   [key: string]: any;
 };
 
+/** A saved, reusable address (`vcard:Location`) the user can pick from in the ad composer —
+ *  distinct from the embedded `as:location` copied onto each ad at submit time. */
+export type LocationRecord = {
+  id: string;
+  'vcard:given-name'?: string;
+  'vcard:hasAddress'?: {
+    'vcard:given-name'?: string;
+    'vcard:hasGeo'?: { 'vcard:latitude'?: number; 'vcard:longitude'?: number };
+  };
+  /** Set to `'home'` on the user's home address, used as the composer's default. */
+  'vcard:TYPE'?: string;
+  [key: string]: any;
+};
+
 export type ProfileRecord = {
   id: string;
   describes: string;

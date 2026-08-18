@@ -14,6 +14,19 @@ export const FILTER_TITLES: Record<FilterId, string> = {
   'request-human': 'Demandes · Compétence'
 };
 
+/** Flat sidebar row list — every row (including group headers) is directly clickable, matching
+ *  the mockup: no expand/collapse interaction, hierarchy is shown via weight/indent only. */
+export const FILTER_ROWS: { id: FilterId; label: string; bold?: boolean; indent?: boolean }[] = [
+  { id: 'all', label: FILTER_TITLES.all },
+  { id: 'mine', label: FILTER_TITLES.mine },
+  { id: 'offer', label: FILTER_TITLES.offer, bold: true },
+  { id: 'offer-atom', label: 'Matériel', indent: true },
+  { id: 'offer-human', label: 'Compétence', indent: true },
+  { id: 'request', label: FILTER_TITLES.request, bold: true },
+  { id: 'request-atom', label: 'Matériel', indent: true },
+  { id: 'request-human', label: 'Compétence', indent: true }
+];
+
 const resourceTypeOf = (annonce: Annonce) =>
   resourceTypeCurie(annonce.kind === 'offer' ? annonce['maid:offerOfResourceType'] : annonce['maid:requestOfResourceType']);
 
