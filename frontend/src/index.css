@@ -30,3 +30,15 @@ a {
 .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):focus {
   background: linear-gradient(135deg, #0e5fd8 0%, #3c8bff 100%);
 }
+
+/** Bleeds the ad composer's title out to the modal's own edges, so the gradient reads as a
+ *  proper header bar rather than a tinted line of text (the modal's own padding, from Antd's
+ *  `contentPadding` token, is 16px 24px). */
+.composer-title {
+  margin: -16px -24px 0;
+  padding: 18px 24px;
+  border-radius: 8px 8px 0 0;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}

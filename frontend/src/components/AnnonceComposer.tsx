@@ -8,6 +8,7 @@ import ImageUpload from './ImageUpload';
 import LocationSelect from './LocationSelect';
 import RecipientPicker from './RecipientPicker';
 import useActivityCollection from '../hooks/useActivityCollection';
+import useIsMobile from '../hooks/useIsMobile';
 import useOutbox from '../hooks/useOutbox';
 import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
 import type { AnnonceKind, AnnonceRecord, Identity, InvitationState, LocationRecord } from '../types';
@@ -32,6 +33,16 @@ const RESOURCE_TYPE_PREDICATE: Record<AnnonceKind, string> = {
   request: 'maid:requestOfResourceType'
 };
 
+const TITLE_PLACEHOLDER: Record<AnnonceKind, string> = {
+  offer: 'Ex. Je donne des outils de jardinage',
+  request: 'Ex. Je cherche une perceuse'
+};
+
+const CONTENT_PLACEHOLDER: Record<AnnonceKind, string> = {
+  offer: 'Bonjour, je propose…',
+  request: 'Bonjour, je cherche…'
+};
+
 type FormValues = {
   title: string;
   content: string;
@@ -54,6 +65,7 @@ const asPlace = (location: LocationRecord, radius: number) => ({
  *  `edit` and `share` are each a single step (either just the content, or just the recipients). */
 const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle, onClose, onSaved }: Props) => {
   const { message } = App.useApp();
+  const isMobile = useIsMobile();
   const [form] = Form.useForm<FormValues>();
   const [kind, setKind] = useState<AnnonceKind>(initialKind);
   const [step, setStep] = useState<1 | 2>(mode === 'share' ? 2 : 1);
@@ -123,7 +135,6 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
 
   const isMultiStep = mode === 'create';
   const heading = mode === 'edit' ? "Modifier l'annonce" : mode === 'share' ? "Partager l'annonce" : 'Créer une annonce';
-  const stepLabel = mode === 'share' ? 'Destinataires' : isMultiStep ? (step === 1 ? "Étape 1 sur 2 · Contenu de l'annonce" : 'Étape 2 sur 2 · Destinataires') : undefined;
 
   const resourceUri = kind === 'offer' ? 'offer' : 'request';
 
@@ -241,12 +252,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     <Modal
       open={open}
       onCancel={onClose}
-      title={
-        <div>
-          <div>{heading}</div>
-          {stepLabel && <div style={{ fontSize: 12, fontWeight: 400, color: 'rgba(0,0,0,0.45)' }}>{stepLabel}</div>}
-        </div>
-      }
+      title={<div className="app-header-gradient composer-title">{heading}</div>}
+      styles={{ header: { padding: 0, marginBottom: 20 }, body: { paddingTop: 0 } }}
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div>
@@ -266,7 +273,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
           </Space>
         </div>
       }
-      width={560}
+      width={isMobile ? 'calc(100vw - 32px)' : 640}
+      style={isMobile ? { top: 16 } : undefined}
       destroyOnHidden
     >
       <div style={{ display: step === 1 ? 'block' : 'none' }}>
@@ -293,15 +301,21 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
               </Form.Item>
             )}
           </Space>
-          <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre annonce' }]}>
-            <Input placeholder="Ex. Je donne des outils de jardinage" />
-          </Form.Item>
-          <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]}>
-            <Input.TextArea rows={7} placeholder="Bonjour, je cherche…" />
-          </Form.Item>
-          <Form.Item name="images" label="Photos (optionnel, jusqu'à 10)">
-            <ImageUpload />
-          </Form.Item>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 20 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre annonce' }]}>
+                <Input placeholder={TITLE_PLACEHOLDER[kind]} />
+              </Form.Item>
+              <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]}>
+                <Input.TextArea rows={6} placeholder={CONTENT_PLACEHOLDER[kind]} />
+              </Form.Item>
+            </div>
+            <div style={isMobile ? undefined : { width: 132, flex: '0 0 auto' }}>
+              <Form.Item name="images" label="Photos (max 10)">
+                <ImageUpload />
+              </Form.Item>
+            </div>
+          </div>
           <Form.Item name="locationId" label="Localité" rules={[{ required: !annonce?.location, message: 'Indiquez une localité' }]}>
             <LocationSelect />
           </Form.Item>

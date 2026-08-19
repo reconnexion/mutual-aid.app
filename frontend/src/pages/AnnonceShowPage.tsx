@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, Input, Result, Spin, Typography } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, MessageOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, InfoCircleOutlined, MessageOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { useGetIdentity, useOne } from '@refinedev/core';
 import { Link, useNavigate, useParams } from 'react-router';
 
@@ -24,6 +24,7 @@ const AnnonceShowPage = () => {
   const { kind, id } = useParams<{ kind: AnnonceKind; id: string }>();
   const navigate = useNavigate();
   const [draft, setDraft] = useState('');
+  const [showPosterPanel, setShowPosterPanel] = useState(false);
   const { data: identity } = useGetIdentity<Identity>();
   const { openComposer } = useComposer();
   const { showContent } = useMobileNav();
@@ -105,6 +106,13 @@ const AnnonceShowPage = () => {
               {!isMobile && 'Partager'}
             </Button>
           )}
+          {!isMobile && !mine && (
+            <Button
+              type={showPosterPanel ? 'default' : 'text'}
+              icon={<InfoCircleOutlined />}
+              onClick={() => setShowPosterPanel(v => !v)}
+            />
+          )}
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -119,13 +127,13 @@ const AnnonceShowPage = () => {
             onChange={e => setDraft(e.target.value)}
             onPressEnter={submitComment}
             placeholder="Écrire un commentaire"
-            style={{ borderRadius: 22, height: 48 }}
+            style={{ borderRadius: 21, height: 42 }}
           />
-          <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={submitComment} loading={sending} style={{ width: 48, height: 48 }} />
+          <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={submitComment} loading={sending} style={{ width: 42, height: 42 }} />
         </div>
       </div>
 
-      {!isMobile && <PosterPanel webId={annonce['dc:creator']} />}
+      {!isMobile && !mine && showPosterPanel && <PosterPanel webId={annonce['dc:creator']} />}
     </div>
   );
 };

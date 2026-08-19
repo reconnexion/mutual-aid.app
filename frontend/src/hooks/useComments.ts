@@ -21,7 +21,9 @@ const useComments = (annonce: AnnonceRecord) => {
       await outbox.post({
         type: 'Create',
         actor: outbox.owner,
-        object: { type: 'Note', attributedTo: outbox.owner, content: content.trim(), inReplyTo: annonce.id },
+        // `summary` (not just `content`) is what the notification pipeline reads for the
+        // notification's own body — see `invitation.service.js`'s `comment` handler.
+        object: { type: 'Note', attributedTo: outbox.owner, content: content.trim(), summary: content.trim(), inReplyTo: annonce.id },
         // Comments must be visible to everyone who can see the ad, not just its creator — public
         // addressing is what makes the Pod grant that (see AS_PUBLIC's doc comment).
         to: [annonce['dc:creator'], AS_PUBLIC]

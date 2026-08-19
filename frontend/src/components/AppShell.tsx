@@ -57,7 +57,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 22 }}>🤝</span>
-          <Text strong className="app-brand" style={{ color: '#fff', fontSize: 19 }}>
+          <Text strong className="app-brand" style={{ color: '#fff', fontSize: 24 }}>
             {APP_NAME}
           </Text>
         </div>

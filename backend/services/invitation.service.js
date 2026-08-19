@@ -107,6 +107,7 @@ module.exports = {
               en: `{{emitterProfile.vcard:given-name}} replied to your ad {{annonceTitle}}`,
               fr: `{{emitterProfile.vcard:given-name}} a répondu à votre annonce {{annonceTitle}}`
             },
+            content: '{{activity.object.summary}}',
             actions: [
               {
                 caption: { en: 'View', fr: 'Voir' },

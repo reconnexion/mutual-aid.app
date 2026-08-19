@@ -79,19 +79,20 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
         }}
       >
         <div style={{ padding: '10px 14px 8px' }}>
-          <Space size={8} wrap style={{ marginBottom: 4 }}>
+          <div style={{ marginBottom: 4 }}>
             <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
               <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
             </a>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {place?.name}
-              {place?.radius ? ` · ${place.radius} km` : ''}
-            </Text>
-          </Space>
-          <div style={{ marginBottom: 8 }}>
+          </div>
+          <Space size={8} wrap style={{ marginBottom: 8, display: 'flex' }}>
+            {annonce.name && (
+              <Text strong style={{ fontSize: 15 }}>
+                {annonce.name}
+              </Text>
+            )}
             <Tag color={CAT_COLOR[kind]}>{CAT_LABEL[kind]}</Tag>
             {resourceType && <Tag color="geekblue">{SUB_LABEL[resourceType] || resourceType}</Tag>}
-          </div>
+          </Space>
           <Link to={detailUrl} style={{ color: 'inherit' }}>
             <Paragraph ellipsis={showFooter ? { rows: 3 } : false} style={{ whiteSpace: 'pre-wrap', marginBottom: images.length ? 12 : 8 }}>
               {annonce.content}
@@ -102,10 +103,27 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
               <ImageGallery images={images} />
             </div>
           )}
-          <Space size={8} style={{ fontSize: 12 }}>
-            <Text type="secondary">{expiryLabel(annonce)}</Text>
-            <Text type="secondary">·</Text>
-            <Text type="secondary">{annonce['dc:created'] ? dayjs(annonce['dc:created']).fromNow() : ''}</Text>
+          <Space size={6} wrap style={{ fontSize: 11, display: 'flex' }}>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              {expiryLabel(annonce)}
+            </Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              ·
+            </Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              Posté le {annonce['dc:created'] ? dayjs(annonce['dc:created']).fromNow() : ''}
+            </Text>
+            {place?.name && (
+              <>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  ·
+                </Text>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {place.name}
+                  {place.radius ? ` (${place.radius} km)` : ''}
+                </Text>
+              </>
+            )}
           </Space>
         </div>
 
