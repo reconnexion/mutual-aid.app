@@ -40,15 +40,17 @@ type Props = {
   annonce: AnnonceRecord;
   kind: AnnonceKind;
   showFooter?: boolean;
+  /** Whether to show the "Modifier"/"Partager" banner for the annonce's own creator. Off on the
+   *  detail page, which shows those actions in its title bar instead (see `AnnonceShowPage`). */
+  showOwnerActions?: boolean;
 };
 
 /** A chat-bubble-style card, matching the mockup: the avatar sits beside the bubble (not inside
  *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message. */
-const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
+const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true }: Props) => {
   const { data: identity } = useGetIdentity<Identity>();
   const { data: author } = useActorProfile(annonce['dc:creator']);
   const { items: replies } = useActivityCollection(annonce.replies);
-  const { items: sharedWith } = useActivityCollection<string>(annonce['apods:announces']);
   const { openComposer } = useComposer();
   const profileUrl = useProfileUrl();
   const place = annonce.location;
@@ -102,20 +104,18 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
           </Space>
         </div>
 
-        {mine && (
+        {mine && showOwnerActions && (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'flex-end',
               gap: 10,
               padding: '8px 14px',
               borderTop: '1px solid #f0f0f0',
               background: '#fafafa'
             }}
           >
-            <Text type="secondary" style={{ flex: 1, minWidth: 0, fontSize: 12 }}>
-              Partagé avec {sharedWith.length} personne{sharedWith.length !== 1 ? 's' : ''}
-            </Text>
             <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
               Modifier
             </Button>
