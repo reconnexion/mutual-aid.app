@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, Result, Spin, Typography } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, InfoCircleOutlined, MessageOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { Button, Drawer, Input, Result, Spin, Typography } from 'antd';
+import { ArrowLeftOutlined, EditOutlined, InfoCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { useGetIdentity, useOne } from '@refinedev/core';
 import { Link, useNavigate, useParams } from 'react-router';
 
@@ -11,7 +11,6 @@ import useActivityCollection from '../hooks/useActivityCollection';
 import useActorProfile from '../hooks/useActorProfile';
 import useComments from '../hooks/useComments';
 import useIsMobile from '../hooks/useIsMobile';
-import useProfileUrl from '../hooks/useProfileUrl';
 import { useComposer } from '../context/ComposerContext';
 import { useMobileNav } from '../context/MobileNavContext';
 import { HEADER_HEIGHT } from '../config/layout';
@@ -29,7 +28,6 @@ const AnnonceShowPage = () => {
   const { openComposer } = useComposer();
   const { showContent } = useMobileNav();
   const isMobile = useIsMobile();
-  const profileUrl = useProfileUrl();
 
   // Reaching this page directly (e.g. a link shared outside the app) should show content rather
   // than the mobile categories home — see `MobileNavContext`.
@@ -81,11 +79,6 @@ const AnnonceShowPage = () => {
           <Title level={5} style={{ margin: 0, flex: 1, minWidth: 0 }} ellipsis>
             {annonce.name || `Annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
           </Title>
-          {isMobile && !mine && (
-            <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
-              <Button type="text" icon={<MessageOutlined />} />
-            </a>
-          )}
           {mine && (
             <Button
               size="small"
@@ -106,17 +99,11 @@ const AnnonceShowPage = () => {
               {!isMobile && 'Partager'}
             </Button>
           )}
-          {!isMobile && !mine && (
-            <Button
-              type={showPosterPanel ? 'default' : 'text'}
-              icon={<InfoCircleOutlined />}
-              onClick={() => setShowPosterPanel(v => !v)}
-            />
-          )}
+          {isMobile && !mine && <Button type="text" icon={<InfoCircleOutlined />} onClick={() => setShowPosterPanel(true)} />}
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <AnnonceCard annonce={annonce} kind={kind!} showOwnerActions={false} />
+          <AnnonceCard annonce={annonce} kind={kind!} />
           <CommentList replies={replies} isLoading={repliesLoading} annonceCreator={annonce['dc:creator']} />
         </div>
 
@@ -133,7 +120,13 @@ const AnnonceShowPage = () => {
         </div>
       </div>
 
-      {!isMobile && !mine && showPosterPanel && <PosterPanel webId={annonce['dc:creator']} />}
+      {!isMobile && <PosterPanel webId={annonce['dc:creator']} />}
+
+      {isMobile && (
+        <Drawer title="À propos de l'annonceur" placement="right" width={300} open={showPosterPanel} onClose={() => setShowPosterPanel(false)} styles={{ body: { padding: 0 } }}>
+          <PosterPanel webId={annonce['dc:creator']} embedded />
+        </Drawer>
+      )}
     </div>
   );
 };

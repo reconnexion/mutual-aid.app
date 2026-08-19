@@ -8,21 +8,29 @@ const GAP = 4;
 const HEIGHT = 260;
 
 // No hover mask (eye icon + "Aperçu" label + darkened background) — the images already look
-// clickable in this layout, the mask was just visual noise.
+// clickable in this layout, the mask was just visual noise. `cursor: pointer` on the image
+// itself is what now signals that, since the mask isn't there to imply it anymore.
 const NO_MASK = { mask: null };
+const IMG_STYLE = { width: '100%', height: '100%', objectFit: 'cover' as const, cursor: 'pointer' as const };
 
 /** A gallery matching the classic "hero + stacked thumbnails" listing layout: one large photo on
  *  the left, up to two smaller ones stacked on the right, with a "+N photos" overlay on the last
  *  thumbnail when there are more. Falls back to a single image or a simple 2-up row below 3
  *  photos. Every photo (including ones only reachable via the "+N" overlay) opens the same
- *  click-through lightbox, via Antd's `Image.PreviewGroup`. */
+ *  click-through lightbox, via Antd's `Image.PreviewGroup`.
+ *
+ *  Every photo is wrapped in its own sized `<div>` rather than sizing `<Image>` directly:
+ *  Antd's `width`/`height` props (not `style`) size the image's own wrapper element, while `style`
+ *  only reaches the inner `<img>` — sizing via a wrapping div side-steps that split entirely. */
 const ImageGallery = ({ images }: Props) => {
   if (images.length === 0) return null;
 
   if (images.length === 1) {
     return (
       <Image.PreviewGroup>
-        <Image src={images[0]} preview={{ mask: null }} style={{ width: '100%', maxHeight: HEIGHT, objectFit: 'cover', borderRadius: 8 }} />
+        <div style={{ height: HEIGHT, borderRadius: 8, overflow: 'hidden' }}>
+          <Image src={images[0]} preview={NO_MASK} style={IMG_STYLE} />
+        </div>
       </Image.PreviewGroup>
     );
   }
@@ -31,8 +39,12 @@ const ImageGallery = ({ images }: Props) => {
     return (
       <Image.PreviewGroup>
         <div style={{ display: 'flex', gap: GAP, height: HEIGHT, borderRadius: 8, overflow: 'hidden' }}>
-          <Image src={images[0]} preview={NO_MASK} style={{ flex: 2, minWidth: 0, height: '100%', objectFit: 'cover' }} />
-          <Image src={images[1]} preview={NO_MASK} style={{ flex: 1, minWidth: 0, height: '100%', objectFit: 'cover' }} />
+          <div style={{ flex: 2, minWidth: 0, height: '100%' }}>
+            <Image src={images[0]} preview={NO_MASK} style={IMG_STYLE} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, height: '100%' }}>
+            <Image src={images[1]} preview={NO_MASK} style={IMG_STYLE} />
+          </div>
         </div>
       </Image.PreviewGroup>
     );
@@ -44,14 +56,14 @@ const ImageGallery = ({ images }: Props) => {
     <Image.PreviewGroup>
       <div style={{ display: 'flex', gap: GAP, height: HEIGHT, borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ flex: 2, minWidth: 0, height: '100%' }}>
-          <Image src={images[0]} preview={NO_MASK} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <Image src={images[0]} preview={NO_MASK} style={IMG_STYLE} />
         </div>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: GAP, height: '100%' }}>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <Image src={images[1]} preview={NO_MASK} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <Image src={images[1]} preview={NO_MASK} style={IMG_STYLE} />
           </div>
           <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-            <Image src={images[2]} preview={NO_MASK} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <Image src={images[2]} preview={NO_MASK} style={IMG_STYLE} />
             {extra > 0 && (
               <div
                 style={{

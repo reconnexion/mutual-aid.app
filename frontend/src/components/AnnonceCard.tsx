@@ -1,6 +1,5 @@
 import { Avatar, Button, Space, Tag, Typography } from 'antd';
-import { CommentOutlined, EditOutlined, ShareAltOutlined, UserOutlined } from '@ant-design/icons';
-import { useGetIdentity } from '@refinedev/core';
+import { CommentOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router';
 import dayjs from 'dayjs';
 
@@ -9,10 +8,10 @@ import LikeButton from './LikeButton';
 import useActorProfile from '../hooks/useActorProfile';
 import useActivityCollection from '../hooks/useActivityCollection';
 import useProfileUrl from '../hooks/useProfileUrl';
-import { useComposer } from '../context/ComposerContext';
+import { formatUsername } from '../utils/formatUsername';
 import { AVATAR_SIZE } from '../config/layout';
 import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
-import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
+import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Paragraph, Text } = Typography;
 
@@ -40,29 +39,19 @@ type Props = {
   annonce: AnnonceRecord;
   kind: AnnonceKind;
   showFooter?: boolean;
-  /** Whether to show the "Modifier"/"Partager" banner for the annonce's own creator. Off on the
-   *  detail page, which shows those actions in its title bar instead (see `AnnonceShowPage`). */
-  showOwnerActions?: boolean;
 };
 
 /** A chat-bubble-style card, matching the mockup: the avatar sits beside the bubble (not inside
- *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message. */
-const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true }: Props) => {
-  const { data: identity } = useGetIdentity<Identity>();
+ *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message.
+ *  "Modifier"/"Partager" live only in the detail page's header — not worth repeating here. */
+const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const { data: author } = useActorProfile(annonce['dc:creator']);
   const { items: replies } = useActivityCollection(annonce.replies);
-  // Membership must be positively confirmed (`isSuccess`), not just "no error yet" — a query that
-  // never ran (no one has been granted share rights yet, so `apods:announcers` doesn't exist on
-  // the annonce at all) looks identical to "ran fine, found nothing".
-  const { items: announcers, isSuccess: announcersLoaded } = useActivityCollection<string>(annonce['apods:announcers']);
-  const { openComposer } = useComposer();
   const profileUrl = useProfileUrl();
   const place = annonce.location;
   const images = imagesOf(annonce['pair:depictedBy']);
   const resourceType = resourceTypeOf(annonce, kind);
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
-  const mine = annonce['dc:creator'] === identity?.id;
-  const canShare = mine || (announcersLoaded && !!identity && announcers.includes(identity.id));
 
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%', maxWidth: 640 }}>
@@ -79,10 +68,13 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
         }}
       >
         <div style={{ padding: '10px 14px 8px' }}>
-          <div style={{ marginBottom: 4 }}>
+          <div style={{ marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
             <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
               <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
             </a>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {formatUsername(annonce['dc:creator'])}
+            </Text>
           </div>
           <Space size={8} wrap style={{ marginBottom: 8, display: 'flex' }}>
             {annonce.name && (
@@ -126,29 +118,6 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
             )}
           </Space>
         </div>
-
-        {canShare && showOwnerActions && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: 10,
-              padding: '8px 14px',
-              borderTop: '1px solid #f0f0f0',
-              background: '#fafafa'
-            }}
-          >
-            {mine && (
-              <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
-                Modifier
-              </Button>
-            )}
-            <Button size="small" icon={<ShareAltOutlined />} onClick={() => openComposer({ mode: 'share', kind, annonce })}>
-              Partager
-            </Button>
-          </div>
-        )}
 
         {showFooter && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', borderTop: '1px solid #f0f0f0' }}>

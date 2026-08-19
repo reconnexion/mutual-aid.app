@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { App, Button, Form, Input, InputNumber, Modal, Popconfirm, Segmented, Slider, Space } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { CloseOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
@@ -252,8 +252,14 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     <Modal
       open={open}
       onCancel={onClose}
-      title={<div className="app-header-gradient composer-title">{heading}</div>}
-      styles={{ header: { padding: 0, marginBottom: 20 }, body: { paddingTop: 0 } }}
+      title={<span style={{ color: '#fff', fontSize: 17, fontWeight: 600 }}>{heading}</span>}
+      closeIcon={<CloseOutlined style={{ color: '#fff' }} />}
+      styles={{
+        content: { padding: 0, overflow: 'hidden' },
+        header: { margin: 0, padding: '14px 20px', background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)' },
+        body: { padding: '20px 24px 0' },
+        footer: { margin: 0, padding: '16px 24px' }
+      }}
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div>
@@ -310,7 +316,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
                 <Input.TextArea rows={6} placeholder={CONTENT_PLACEHOLDER[kind]} />
               </Form.Item>
             </div>
-            <div style={isMobile ? undefined : { width: 132, flex: '0 0 auto' }}>
+            <div style={{ width: isMobile ? undefined : 132, flex: '0 0 auto', maxHeight: 320, overflowY: 'auto' }}>
               <Form.Item name="images" label="Photos (max 10)">
                 <ImageUpload />
               </Form.Item>
