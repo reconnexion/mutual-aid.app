@@ -259,11 +259,18 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
       }
       closeIcon={<CloseOutlined style={{ color: '#fff' }} />}
       styles={{
-        // Only `content` gets a border-radius — clipping the (square-cornered) header to it via
-        // `overflow: hidden` is pixel-perfect, whereas giving the header its own matching radius
-        // left a stray sliver of white in the corner (the two roundings never quite lined up).
+        // Both the content's overflow-clip *and* the header's own matching radius are needed —
+        // Firefox leaves a thin white anti-aliasing seam along the clipped edge when only the
+        // parent rounds it (Chromium doesn't, which is why this was missed at first). Forcing the
+        // header onto its own compositing layer (`transform`) is what actually clears it up.
         content: { padding: 0, overflow: 'hidden', borderRadius: 8 },
-        header: { margin: 0, padding: '14px 20px', background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)' },
+        header: {
+          margin: 0,
+          padding: '14px 20px',
+          background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)',
+          borderRadius: '8px 8px 0 0',
+          transform: 'translateZ(0)'
+        },
         body: { padding: '16px 24px 0' },
         footer: { margin: 0, padding: '16px 24px' }
       }}
