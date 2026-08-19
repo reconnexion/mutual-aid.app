@@ -76,7 +76,7 @@ const AnnonceShowPage = () => {
           }}
         >
           <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
-          <Title level={5} style={{ margin: 0, flex: 1, minWidth: 0 }} ellipsis>
+          <Title level={5} className="app-brand" style={{ margin: 0, flex: 1, minWidth: 0, fontSize: 19 }} ellipsis>
             {annonce.name || `Annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
           </Title>
           {mine && (

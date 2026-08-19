@@ -97,13 +97,13 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
           )}
           <Space size={6} wrap style={{ fontSize: 11, display: 'flex' }}>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              {expiryLabel(annonce)}
+              Posté le {annonce['dc:created'] ? dayjs(annonce['dc:created']).format('D MMM') : ''}
             </Text>
             <Text type="secondary" style={{ fontSize: 11 }}>
               ·
             </Text>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              Posté le {annonce['dc:created'] ? dayjs(annonce['dc:created']).format('D MMM') : ''}
+              {expiryLabel(annonce)}
             </Text>
             {place?.name && (
               <>

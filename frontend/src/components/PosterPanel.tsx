@@ -26,9 +26,9 @@ const PosterPanel = ({ webId, embedded = false }: Props) => {
 
   const content = !isLoading && (
     <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-      <div style={{ background: '#e6f4ff', padding: '40px 24px 24px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100%', boxSizing: 'border-box', background: '#e6f4ff', padding: '40px 24px 24px', textAlign: 'center' }}>
         <Avatar
-          size={100}
+          size={140}
           src={profile?.['vcard:photo']}
           icon={<UserOutlined />}
           style={{ border: '4px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
@@ -80,7 +80,7 @@ const PosterPanel = ({ webId, embedded = false }: Props) => {
           borderBottom: '1px solid #f0f0f0'
         }}
       >
-        <Title level={5} style={{ margin: 0 }}>
+        <Title level={5} className="app-brand" style={{ margin: 0, fontSize: 17 }}>
           À propos de l'annonceur
         </Title>
       </div>

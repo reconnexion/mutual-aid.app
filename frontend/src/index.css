@@ -30,3 +30,14 @@ a {
 .ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):focus {
   background: linear-gradient(135deg, #0e5fd8 0%, #3c8bff 100%);
 }
+
+/** Antd's picture-card Upload sizes each item with a fixed pixel width/height by default — fine
+ *  on desktop, but on a narrow phone screen that only fits 2 (awkwardly) per row. Force exactly
+ *  3 per row below the mobile breakpoint (matches `useIsMobile`) via a percentage width instead. */
+@media (max-width: 768px) {
+  .image-upload-3col :where(.ant-upload-select, .ant-upload-list-item-container) {
+    width: calc((100% - 16px) / 3) !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+  }
+}

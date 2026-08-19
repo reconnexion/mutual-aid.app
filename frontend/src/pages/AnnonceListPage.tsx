@@ -59,7 +59,7 @@ const AnnonceListPage = () => {
       >
         {isMobile && <Button icon={<ArrowLeftOutlined />} type="text" onClick={showSidebar} style={{ marginLeft: -8 }} />}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Title level={4} style={{ margin: 0, lineHeight: '26px' }} ellipsis>
+          <Title level={4} className="app-brand" style={{ margin: 0, lineHeight: '26px', fontSize: 20 }} ellipsis>
             {FILTER_TITLES[filter]}
           </Title>
           <Text type="secondary" style={{ fontSize: 12 }}>

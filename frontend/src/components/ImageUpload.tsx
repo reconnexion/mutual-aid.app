@@ -48,7 +48,16 @@ const ImageUpload = ({ value = [], onChange }: Props) => {
   };
 
   return (
-    <Upload listType="picture-card" fileList={fileList} customRequest={customRequest} onChange={handleChange} accept="image/*" multiple maxCount={MAX_IMAGES}>
+    <Upload
+      className="image-upload-3col"
+      listType="picture-card"
+      fileList={fileList}
+      customRequest={customRequest}
+      onChange={handleChange}
+      accept="image/*"
+      multiple
+      maxCount={MAX_IMAGES}
+    >
       {fileList.length >= MAX_IMAGES ? null : (
         <div>
           <PlusOutlined />

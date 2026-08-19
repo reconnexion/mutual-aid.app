@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { App, Button, Form, Input, InputNumber, Modal, Popconfirm, Segmented, Slider, Space } from 'antd';
-import { CloseOutlined, DeleteOutlined } from '@ant-design/icons';
+import { App, Button, Form, Input, InputNumber, Modal, Popconfirm, Segmented, Slider, Space, Tooltip } from 'antd';
+import { CloseOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
@@ -252,11 +252,18 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     <Modal
       open={open}
       onCancel={onClose}
-      title={<span style={{ color: '#fff', fontSize: 17, fontWeight: 600 }}>{heading}</span>}
+      title={
+        <span className="app-brand" style={{ color: '#fff', fontSize: 18 }}>
+          {heading}
+        </span>
+      }
       closeIcon={<CloseOutlined style={{ color: '#fff' }} />}
       styles={{
+        // Only `content` gets a border-radius — clipping the (square-cornered) header to it via
+        // `overflow: hidden` is pixel-perfect, whereas giving the header its own matching radius
+        // left a stray sliver of white in the corner (the two roundings never quite lined up).
         content: { padding: 0, overflow: 'hidden', borderRadius: 8 },
-        header: { margin: 0, padding: '14px 20px', background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)', borderRadius: '8px 8px 0 0' },
+        header: { margin: 0, padding: '14px 20px', background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)' },
         body: { padding: '16px 24px 0' },
         footer: { margin: 0, padding: '16px 24px' }
       }}
@@ -317,7 +324,17 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
           <Form.Item name="locationId" label="Localité" rules={[{ required: !annonce?.location, message: 'Indiquez une localité' }]}>
             <LocationSelect />
           </Form.Item>
-          <Form.Item name="radius" label="Rayon de diffusion">
+          <Form.Item
+            name="radius"
+            label={
+              <Space size={4}>
+                Rayon de diffusion
+                <Tooltip title="Les personnes situées au-delà de ce rayon ne recevront pas votre annonce.">
+                  <QuestionCircleOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
+                </Tooltip>
+              </Space>
+            }
+          >
             <Slider min={5} max={50} step={5} marks={{ 5: '5 km', 50: '50 km' }} />
           </Form.Item>
           <Form.Item name="expiryDays" label="Expire dans (jours)" rules={[{ required: true }]}>
