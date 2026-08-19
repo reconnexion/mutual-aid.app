@@ -19,9 +19,11 @@ const IMG_STYLE = { width: '100%', height: '100%', objectFit: 'cover' as const, 
  *  photos. Every photo (including ones only reachable via the "+N" overlay) opens the same
  *  click-through lightbox, via Antd's `Image.PreviewGroup`.
  *
- *  Every photo is wrapped in its own sized `<div>` rather than sizing `<Image>` directly:
- *  Antd's `width`/`height` props (not `style`) size the image's own wrapper element, while `style`
- *  only reaches the inner `<img>` — sizing via a wrapping div side-steps that split entirely. */
+ *  Every photo is both wrapped in its own sized `<div>` *and* given explicit `width`/`height`
+ *  props (not just `style`, which only reaches the inner `<img>` — `width`/`height` are what
+ *  size Antd's own `.ant-image` wrapper element around it). Without both, that wrapper can end
+ *  up unsized on some viewports, letting the image overflow past its container's rounded corners
+ *  on one edge only. */
 const ImageGallery = ({ images }: Props) => {
   if (images.length === 0) return null;
 
@@ -29,7 +31,7 @@ const ImageGallery = ({ images }: Props) => {
     return (
       <Image.PreviewGroup>
         <div style={{ height: HEIGHT, borderRadius: 8, overflow: 'hidden' }}>
-          <Image src={images[0]} preview={NO_MASK} style={IMG_STYLE} />
+          <Image src={images[0]} preview={NO_MASK} width="100%" height="100%" style={IMG_STYLE} />
         </div>
       </Image.PreviewGroup>
     );
@@ -40,10 +42,10 @@ const ImageGallery = ({ images }: Props) => {
       <Image.PreviewGroup>
         <div style={{ display: 'flex', gap: GAP, height: HEIGHT, borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ flex: 2, minWidth: 0, height: '100%' }}>
-            <Image src={images[0]} preview={NO_MASK} style={IMG_STYLE} />
+            <Image src={images[0]} preview={NO_MASK} width="100%" height="100%" style={IMG_STYLE} />
           </div>
           <div style={{ flex: 1, minWidth: 0, height: '100%' }}>
-            <Image src={images[1]} preview={NO_MASK} style={IMG_STYLE} />
+            <Image src={images[1]} preview={NO_MASK} width="100%" height="100%" style={IMG_STYLE} />
           </div>
         </div>
       </Image.PreviewGroup>
@@ -56,14 +58,14 @@ const ImageGallery = ({ images }: Props) => {
     <Image.PreviewGroup>
       <div style={{ display: 'flex', gap: GAP, height: HEIGHT, borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ flex: 2, minWidth: 0, height: '100%' }}>
-          <Image src={images[0]} preview={NO_MASK} style={IMG_STYLE} />
+          <Image src={images[0]} preview={NO_MASK} width="100%" height="100%" style={IMG_STYLE} />
         </div>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: GAP, height: '100%' }}>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <Image src={images[1]} preview={NO_MASK} style={IMG_STYLE} />
+            <Image src={images[1]} preview={NO_MASK} width="100%" height="100%" style={IMG_STYLE} />
           </div>
           <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-            <Image src={images[2]} preview={NO_MASK} style={IMG_STYLE} />
+            <Image src={images[2]} preview={NO_MASK} width="100%" height="100%" style={IMG_STYLE} />
             {extra > 0 && (
               <div
                 style={{

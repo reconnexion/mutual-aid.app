@@ -255,9 +255,9 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
       title={<span style={{ color: '#fff', fontSize: 17, fontWeight: 600 }}>{heading}</span>}
       closeIcon={<CloseOutlined style={{ color: '#fff' }} />}
       styles={{
-        content: { padding: 0, overflow: 'hidden' },
-        header: { margin: 0, padding: '14px 20px', background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)' },
-        body: { padding: '20px 24px 0' },
+        content: { padding: 0, overflow: 'hidden', borderRadius: 8 },
+        header: { margin: 0, padding: '14px 20px', background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)', borderRadius: '8px 8px 0 0' },
+        body: { padding: '16px 24px 0' },
         footer: { margin: 0, padding: '16px 24px' }
       }}
       footer={
@@ -266,7 +266,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
             {mode === 'edit' && (
               <Popconfirm title="Supprimer cette annonce ?" okText="Supprimer" cancelText="Annuler" okButtonProps={{ danger: true }} onConfirm={deleteAd}>
                 <Button danger icon={<DeleteOutlined />} loading={deleting}>
-                  Supprimer
+                  {!isMobile && 'Supprimer'}
                 </Button>
               </Popconfirm>
             )}
@@ -285,8 +285,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     >
       <div style={{ display: step === 1 ? 'block' : 'none' }}>
         <Form form={form} layout="vertical">
-          <Space size={8} style={{ marginBottom: 24 }} wrap>
-            {mode === 'create' && (
+          {mode === 'create' && (
+            <Space size={8} style={{ marginBottom: 16 }} wrap>
               <Segmented
                 value={kind}
                 onChange={value => setKind(value as AnnonceKind)}
@@ -295,8 +295,6 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
                   { label: 'Demande', value: 'request' }
                 ]}
               />
-            )}
-            {mode === 'create' && (
               <Form.Item name="resourceType" noStyle>
                 <Segmented
                   options={[
@@ -305,23 +303,17 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
                   ]}
                 />
               </Form.Item>
-            )}
-          </Space>
-          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 20 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre annonce' }]}>
-                <Input placeholder={TITLE_PLACEHOLDER[kind]} />
-              </Form.Item>
-              <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]}>
-                <Input.TextArea rows={6} placeholder={CONTENT_PLACEHOLDER[kind]} />
-              </Form.Item>
-            </div>
-            <div style={{ width: isMobile ? undefined : 132, flex: '0 0 auto', maxHeight: 320, overflowY: 'auto' }}>
-              <Form.Item name="images" label="Photos (max 10)">
-                <ImageUpload />
-              </Form.Item>
-            </div>
-          </div>
+            </Space>
+          )}
+          <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre annonce' }]}>
+            <Input placeholder={TITLE_PLACEHOLDER[kind]} />
+          </Form.Item>
+          <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]} style={{ marginBottom: 16 }}>
+            <Input.TextArea rows={5} placeholder={CONTENT_PLACEHOLDER[kind]} />
+          </Form.Item>
+          <Form.Item name="images" label="Photos (max 10)">
+            <ImageUpload />
+          </Form.Item>
           <Form.Item name="locationId" label="Localité" rules={[{ required: !annonce?.location, message: 'Indiquez une localité' }]}>
             <LocationSelect />
           </Form.Item>

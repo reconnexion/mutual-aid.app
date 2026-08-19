@@ -86,7 +86,7 @@ const AnnonceListPage = () => {
           onChange={e => setDraft(e.target.value)}
           onPressEnter={startAnnonce}
           placeholder="Créer une nouvelle annonce"
-          style={{ borderRadius: 21, height: 42 }}
+          style={{ borderRadius: 21, height: 42, fontSize: 14, paddingLeft: 16 }}
         />
         <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={startAnnonce} style={{ width: 42, height: 42 }} />
       </div>

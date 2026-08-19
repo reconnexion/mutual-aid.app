@@ -72,7 +72,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
             <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
               <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
             </a>
-            <Text type="secondary" style={{ fontSize: 12 }}>
+            <Text type="secondary" style={{ fontSize: 11 }}>
               {formatUsername(annonce['dc:creator'])}
             </Text>
           </div>
@@ -103,7 +103,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
               ·
             </Text>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              Posté le {annonce['dc:created'] ? dayjs(annonce['dc:created']).fromNow() : ''}
+              Posté le {annonce['dc:created'] ? dayjs(annonce['dc:created']).format('D MMM') : ''}
             </Text>
             {place?.name && (
               <>

@@ -114,7 +114,7 @@ const AnnonceShowPage = () => {
             onChange={e => setDraft(e.target.value)}
             onPressEnter={submitComment}
             placeholder="Écrire un commentaire"
-            style={{ borderRadius: 21, height: 42 }}
+            style={{ borderRadius: 21, height: 42, fontSize: 14, paddingLeft: 16 }}
           />
           <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={submitComment} loading={sending} style={{ width: 42, height: 42 }} />
         </div>
