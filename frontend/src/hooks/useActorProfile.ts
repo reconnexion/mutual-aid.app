@@ -26,7 +26,13 @@ const useActorProfile = (webId?: string) => {
     queryOptions: { enabled: !!actorQuery.data?.url }
   });
 
-  return { data: result, isLoading: actorQuery.isLoading || query.isLoading };
+  return {
+    data: result,
+    /** The WebID document's own `dc:created` — when this actor's account was created. Not on the
+     *  Profile resource, so it's read straight off the actor document already fetched above. */
+    actorCreated: actorQuery.data?.['dc:created'] as string | undefined,
+    isLoading: actorQuery.isLoading || query.isLoading
+  };
 };
 
 export default useActorProfile;

@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 
 import AnnonceCard from '../components/AnnonceCard';
 import CommentList from '../components/CommentList';
+import PosterPanel from '../components/PosterPanel';
 import useActorProfile from '../hooks/useActorProfile';
 import useComments from '../hooks/useComments';
 import { HEADER_HEIGHT } from '../config/layout';
@@ -40,41 +41,45 @@ const AnnonceShowPage = () => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div
-        style={{
-          flex: `0 0 ${HEADER_HEIGHT}px`,
-          height: HEADER_HEIGHT,
-          boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '0 16px',
-          background: '#fff',
-          borderBottom: '1px solid #f0f0f0'
-        }}
-      >
-        <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
-        <Title level={5} style={{ margin: 0 }}>
-          Annonce de {author?.['vcard:given-name'] || 'Voisin·e'}
-        </Title>
+    <div style={{ height: '100%', display: 'flex' }}>
+      <div style={{ flex: 1, minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div
+          style={{
+            flex: `0 0 ${HEADER_HEIGHT}px`,
+            height: HEADER_HEIGHT,
+            boxSizing: 'border-box',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '0 16px',
+            background: '#fff',
+            borderBottom: '1px solid #f0f0f0'
+          }}
+        >
+          <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
+          <Title level={5} style={{ margin: 0 }}>
+            Annonce de {author?.['vcard:given-name'] || 'Voisin·e'}
+          </Title>
+        </div>
+
+        <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <AnnonceCard annonce={annonce} kind={kind!} />
+          <CommentList replies={replies} isLoading={repliesLoading} annonceCreator={annonce['dc:creator']} />
+        </div>
+
+        <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px' }}>
+          <Input
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            onPressEnter={submitComment}
+            placeholder="Écrire un commentaire"
+            style={{ borderRadius: 18 }}
+          />
+          <Button type="primary" shape="circle" icon={<SendOutlined />} onClick={submitComment} loading={sending} />
+        </div>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <AnnonceCard annonce={annonce} kind={kind!} />
-        <CommentList replies={replies} isLoading={repliesLoading} annonceCreator={annonce['dc:creator']} />
-      </div>
-
-      <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px' }}>
-        <Input
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onPressEnter={submitComment}
-          placeholder="Écrire un commentaire"
-          style={{ borderRadius: 18 }}
-        />
-        <Button type="primary" shape="circle" icon={<SendOutlined />} onClick={submitComment} loading={sending} />
-      </div>
+      <PosterPanel webId={annonce['dc:creator']} />
     </div>
   );
 };
