@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Input, Result, Spin, Typography } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, MessageOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
 import { useGetIdentity, useOne } from '@refinedev/core';
 import { Link, useNavigate, useParams } from 'react-router';
 
@@ -10,7 +10,10 @@ import PosterPanel from '../components/PosterPanel';
 import useActivityCollection from '../hooks/useActivityCollection';
 import useActorProfile from '../hooks/useActorProfile';
 import useComments from '../hooks/useComments';
+import useIsMobile from '../hooks/useIsMobile';
+import useProfileUrl from '../hooks/useProfileUrl';
 import { useComposer } from '../context/ComposerContext';
+import { useMobileNav } from '../context/MobileNavContext';
 import { HEADER_HEIGHT } from '../config/layout';
 import { retryRefresh } from '../utils/retry';
 import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
@@ -23,6 +26,16 @@ const AnnonceShowPage = () => {
   const [draft, setDraft] = useState('');
   const { data: identity } = useGetIdentity<Identity>();
   const { openComposer } = useComposer();
+  const { showContent } = useMobileNav();
+  const isMobile = useIsMobile();
+  const profileUrl = useProfileUrl();
+
+  // Reaching this page directly (e.g. a link shared outside the app) should show content rather
+  // than the mobile categories home — see `MobileNavContext`.
+  useEffect(() => {
+    showContent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { result: annonce, query } = useOne<AnnonceRecord>({
     resource: kind,
@@ -67,14 +80,29 @@ const AnnonceShowPage = () => {
           <Title level={5} style={{ margin: 0, flex: 1, minWidth: 0 }} ellipsis>
             {annonce.name || `Annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
           </Title>
+          {isMobile && !mine && (
+            <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
+              <Button type="text" icon={<MessageOutlined />} />
+            </a>
+          )}
           {mine && (
-            <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
-              Modifier
+            <Button
+              size="small"
+              type={isMobile ? 'text' : undefined}
+              icon={<EditOutlined />}
+              onClick={() => openComposer({ mode: 'edit', kind, annonce })}
+            >
+              {!isMobile && 'Modifier'}
             </Button>
           )}
           {canShare && (
-            <Button size="small" icon={<ShareAltOutlined />} onClick={() => openComposer({ mode: 'share', kind, annonce })}>
-              Partager
+            <Button
+              size="small"
+              type={isMobile ? 'text' : undefined}
+              icon={<ShareAltOutlined />}
+              onClick={() => openComposer({ mode: 'share', kind, annonce })}
+            >
+              {!isMobile && 'Partager'}
             </Button>
           )}
         </div>
@@ -97,7 +125,7 @@ const AnnonceShowPage = () => {
         </div>
       </div>
 
-      <PosterPanel webId={annonce['dc:creator']} />
+      {!isMobile && <PosterPanel webId={annonce['dc:creator']} />}
     </div>
   );
 };
