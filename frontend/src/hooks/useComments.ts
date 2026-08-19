@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { App } from 'antd';
 
 import useActivityCollection from './useActivityCollection';
-import useOutbox from './useOutbox';
+import useOutbox, { AS_PUBLIC } from './useOutbox';
 import { retryRefresh } from '../utils/retry';
 import type { AnnonceRecord, ReplyRecord } from '../types';
 
@@ -22,7 +22,9 @@ const useComments = (annonce: AnnonceRecord) => {
         type: 'Create',
         actor: outbox.owner,
         object: { type: 'Note', attributedTo: outbox.owner, content: content.trim(), inReplyTo: annonce.id },
-        to: annonce['dc:creator']
+        // Comments must be visible to everyone who can see the ad, not just its creator — public
+        // addressing is what makes the Pod grant that (see AS_PUBLIC's doc comment).
+        to: [annonce['dc:creator'], AS_PUBLIC]
       });
       retryRefresh(invalidate);
     } catch (e: any) {

@@ -4,7 +4,7 @@ import { HeartFilled, HeartOutlined } from '@ant-design/icons';
 import { useGetIdentity, useInvalidate } from '@refinedev/core';
 
 import useActivityCollection from '../hooks/useActivityCollection';
-import useOutbox from '../hooks/useOutbox';
+import useOutbox, { AS_PUBLIC } from '../hooks/useOutbox';
 import { retryRefresh } from '../utils/retry';
 import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
 
@@ -29,20 +29,17 @@ const LikeButton = ({ annonce, kind }: Props) => {
     if (!identity) return;
     setPending(true);
     try {
-      // `to` is required for delivery to the ad owner's inbox — without it, the Like never
-      // reaches them, and their `as:likes` collection (what everyone else reads) never updates.
+      // `to` must reach the ad's creator (for delivery/notification) and be publicly addressed
+      // (so the Pod's rights handler grants read to everyone, not just the creator — otherwise a
+      // like the creator posts on their own ad, self-addressed, grants nobody else anything).
       // Posted with the plain AS2 context (`postPlain`, not `post`): merging in our app's own
       // backend context here breaks the Pod's first-time `as:likes` collection creation — Like
       // doesn't touch any of our custom maid:/pair: properties anyway, so it doesn't need it.
+      const to = [annonce['dc:creator'], AS_PUBLIC];
       if (liked) {
-        await outbox.postPlain({
-          type: 'Undo',
-          actor: outbox.owner,
-          object: { type: 'Like', actor: outbox.owner, object: annonce.id },
-          to: annonce['dc:creator']
-        });
+        await outbox.postPlain({ type: 'Undo', actor: outbox.owner, object: { type: 'Like', actor: outbox.owner, object: annonce.id }, to });
       } else {
-        await outbox.postPlain({ type: 'Like', actor: outbox.owner, object: annonce.id, to: annonce['dc:creator'] });
+        await outbox.postPlain({ type: 'Like', actor: outbox.owner, object: annonce.id, to });
       }
       retryRefresh(() => {
         invalidateLikes();
