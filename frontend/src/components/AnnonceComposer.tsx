@@ -259,17 +259,16 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
       }
       closeIcon={<CloseOutlined style={{ color: '#fff' }} />}
       styles={{
-        // Both the content's overflow-clip *and* the header's own matching radius are needed —
-        // Firefox leaves a thin white anti-aliasing seam along the clipped edge when only the
-        // parent rounds it (Chromium doesn't, which is why this was missed at first). Forcing the
-        // header onto its own compositing layer (`transform`) is what actually clears it up.
-        content: { padding: 0, overflow: 'hidden', borderRadius: 8 },
+        // `clip-path` instead of `overflow: hidden` — the latter (even with a matching radius on
+        // the header, even with `transform` forcing a compositing layer) still leaves a white
+        // anti-aliasing seam on real, hardware-accelerated Firefox. `clip-path` defines a hard
+        // vector mask rather than relying on rasterized layer blending, which sidesteps that.
+        content: { padding: 0, clipPath: 'inset(0 round 8px)' },
         header: {
           margin: 0,
           padding: '14px 20px',
           background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)',
-          borderRadius: '8px 8px 0 0',
-          transform: 'translateZ(0)'
+          borderRadius: '8px 8px 0 0'
         },
         body: { padding: '16px 24px 0' },
         footer: { margin: 0, padding: '16px 24px' }
