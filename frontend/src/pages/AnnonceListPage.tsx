@@ -63,7 +63,7 @@ const AnnonceListPage = () => {
             {FILTER_TITLES[filter]}
           </Title>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {filtered.length} annonce{filtered.length !== 1 ? 's' : ''}
+            {filtered.length} petite{filtered.length !== 1 ? 's' : ''} annonce{filtered.length !== 1 ? 's' : ''}
             {filter === 'mine' ? ' créée par vous' : ' partagée avec vous'}
           </Text>
         </div>
@@ -73,7 +73,7 @@ const AnnonceListPage = () => {
         {isLoading ? (
           <Spin />
         ) : filtered.length === 0 ? (
-          <Empty description="Aucune annonce ici pour le moment" style={{ marginTop: 48 }} />
+          <Empty description="Aucune petite annonce ici pour le moment" style={{ marginTop: 48 }} />
         ) : (
           filtered.map(annonce => <AnnonceCard key={annonce.id} annonce={annonce} kind={annonce.kind} />)
         )}
@@ -85,7 +85,7 @@ const AnnonceListPage = () => {
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onPressEnter={startAnnonce}
-          placeholder="Créer une nouvelle annonce"
+          placeholder="Poster une petite annonce"
           style={{ borderRadius: 21, height: 42, fontSize: 14, paddingLeft: 16 }}
         />
         <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={startAnnonce} style={{ width: 42, height: 42 }} />

@@ -90,7 +90,7 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, onChange }: Pro
         <Alert
           type="warning"
           showIcon
-          message="Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des annonces."
+          message="Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des petites annonces."
         />
       )}
     </div>

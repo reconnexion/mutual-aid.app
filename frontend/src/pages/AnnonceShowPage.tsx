@@ -48,7 +48,7 @@ const AnnonceShowPage = () => {
   const canShare = mine || (announcersLoaded && !!identity && announcers.includes(identity.id));
 
   if (query.isLoading) return <Spin style={{ margin: 48 }} />;
-  if (!annonce) return <Result status="404" title="Annonce introuvable" extra={<Link to="/annonces">Retour</Link>} />;
+  if (!annonce) return <Result status="404" title="Petite annonce introuvable" extra={<Link to="/annonces">Retour</Link>} />;
 
   const submitComment = async () => {
     const content = draft;
@@ -77,7 +77,7 @@ const AnnonceShowPage = () => {
         >
           <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
           <Title level={5} className="app-brand" style={{ margin: 0, flex: 1, minWidth: 0, fontSize: 19 }} ellipsis>
-            {annonce.name || `Annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
+            {annonce.name || `Petite annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
           </Title>
           {mine && (
             <Button

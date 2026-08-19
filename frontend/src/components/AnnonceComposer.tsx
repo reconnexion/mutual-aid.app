@@ -134,7 +134,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
   }, [open, mode, locations.data, form]);
 
   const isMultiStep = mode === 'create';
-  const heading = mode === 'edit' ? "Modifier l'annonce" : mode === 'share' ? "Partager l'annonce" : 'Créer une annonce';
+  const heading = mode === 'edit' ? 'Modifier la petite annonce' : mode === 'share' ? 'Partager la petite annonce' : 'Poster une petite annonce';
 
   const resourceUri = kind === 'offer' ? 'offer' : 'request';
 
@@ -215,7 +215,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
       }
 
       invalidate({ resource: resourceUri, invalidates: ['list', 'detail'] });
-      message.success(mode === 'create' ? 'Annonce publiée' : mode === 'edit' ? 'Annonce mise à jour' : 'Annonce partagée');
+      message.success(mode === 'create' ? 'Petite annonce publiée' : mode === 'edit' ? 'Petite annonce mise à jour' : 'Petite annonce partagée');
       onSaved?.();
       onClose();
     } catch (e: any) {
@@ -230,7 +230,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     try {
       await deleteAnnonce({ resource: resourceUri, id: annonce.id });
       invalidate({ resource: resourceUri, invalidates: ['list'] });
-      message.success('Annonce supprimée');
+      message.success('Petite annonce supprimée');
       onSaved?.();
       onClose();
     } catch (e: any) {
@@ -277,7 +277,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div>
             {mode === 'edit' && (
-              <Popconfirm title="Supprimer cette annonce ?" okText="Supprimer" cancelText="Annuler" okButtonProps={{ danger: true }} onConfirm={deleteAd}>
+              <Popconfirm title="Supprimer cette petite annonce ?" okText="Supprimer" cancelText="Annuler" okButtonProps={{ danger: true }} onConfirm={deleteAd}>
                 <Button danger icon={<DeleteOutlined />} loading={deleting}>
                   {!isMobile && 'Supprimer'}
                 </Button>
@@ -318,10 +318,10 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
               </Form.Item>
             </Space>
           )}
-          <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre annonce' }]}>
+          <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre petite annonce' }]}>
             <Input placeholder={TITLE_PLACEHOLDER[kind]} />
           </Form.Item>
-          <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]} style={{ marginBottom: 16 }}>
+          <Form.Item name="content" label="Votre petite annonce" rules={[{ required: true, message: 'Décrivez votre petite annonce' }]} style={{ marginBottom: 16 }}>
             <Input.TextArea rows={5} placeholder={CONTENT_PLACEHOLDER[kind]} />
           </Form.Item>
           <Form.Item name="images" label="Photos (max 10)">
@@ -335,7 +335,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
             label={
               <Space size={4}>
                 Rayon de diffusion
-                <Tooltip title="Les personnes situées au-delà de ce rayon ne recevront pas votre annonce.">
+                <Tooltip title="Les personnes situées au-delà de ce rayon ne recevront pas votre petite annonce.">
                   <QuestionCircleOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
                 </Tooltip>
               </Space>

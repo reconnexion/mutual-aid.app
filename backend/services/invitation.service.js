@@ -105,7 +105,7 @@ module.exports = {
           template: {
             title: {
               en: `{{emitterProfile.vcard:given-name}} replied to your ad {{annonceTitle}}`,
-              fr: `{{emitterProfile.vcard:given-name}} a répondu à votre annonce {{annonceTitle}}`
+              fr: `{{emitterProfile.vcard:given-name}} a répondu à votre petite annonce {{annonceTitle}}`
             },
             content: '{{activity.object.summary}}',
             actions: [

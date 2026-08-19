@@ -4,8 +4,8 @@ import type { Annonce } from '../hooks/useAnnonces';
 export type FilterId = 'all' | 'mine' | 'offer' | 'offer-atom' | 'offer-human' | 'request' | 'request-atom' | 'request-human';
 
 export const FILTER_TITLES: Record<FilterId, string> = {
-  all: 'Toutes les annonces',
-  mine: 'Mes annonces',
+  all: 'Toutes les petites annonces',
+  mine: 'Mes petites annonces',
   offer: 'Offres',
   'offer-atom': 'Offres · Matériel',
   'offer-human': 'Offres · Compétence',

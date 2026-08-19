@@ -97,7 +97,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
 
       <div style={{ flex: '0 0 auto', padding: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} block onClick={() => openComposer()} style={{ height: 42 }}>
-          Créer une annonce
+          Poster une petite annonce
         </Button>
       </div>
     </div>
