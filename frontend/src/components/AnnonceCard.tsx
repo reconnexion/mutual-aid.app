@@ -51,6 +51,10 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
   const { data: identity } = useGetIdentity<Identity>();
   const { data: author } = useActorProfile(annonce['dc:creator']);
   const { items: replies } = useActivityCollection(annonce.replies);
+  // Membership must be positively confirmed (`isSuccess`), not just "no error yet" — a query that
+  // never ran (no one has been granted share rights yet, so `apods:announcers` doesn't exist on
+  // the annonce at all) looks identical to "ran fine, found nothing".
+  const { items: announcers, isSuccess: announcersLoaded } = useActivityCollection<string>(annonce['apods:announcers']);
   const { openComposer } = useComposer();
   const profileUrl = useProfileUrl();
   const place = annonce.location;
@@ -58,6 +62,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
   const resourceType = resourceTypeOf(annonce, kind);
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
   const mine = annonce['dc:creator'] === identity?.id;
+  const canShare = mine || (announcersLoaded && !!identity && announcers.includes(identity.id));
 
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%', maxWidth: 640 }}>
@@ -104,7 +109,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
           </Space>
         </div>
 
-        {mine && showOwnerActions && (
+        {canShare && showOwnerActions && (
           <div
             style={{
               display: 'flex',
@@ -116,9 +121,11 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, showOwnerActions = true
               background: '#fafafa'
             }}
           >
-            <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
-              Modifier
-            </Button>
+            {mine && (
+              <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
+                Modifier
+              </Button>
+            )}
             <Button size="small" icon={<ShareAltOutlined />} onClick={() => openComposer({ mode: 'share', kind, annonce })}>
               Partager
             </Button>

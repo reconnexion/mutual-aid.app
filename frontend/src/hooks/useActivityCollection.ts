@@ -39,6 +39,7 @@ const useActivityCollection = <T = any,>(collectionUri?: string) => {
   return {
     items: query.data ?? EMPTY_ITEMS,
     isLoading: query.isLoading,
+    isSuccess: query.isSuccess,
     error: query.error,
     refetch: query.refetch,
     invalidate: () => queryClient.invalidateQueries({ queryKey })

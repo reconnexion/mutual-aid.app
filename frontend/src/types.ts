@@ -60,6 +60,14 @@ export type LocationRecord = {
   [key: string]: any;
 };
 
+export type InvitationState = {
+  canView: boolean;
+  canShare: boolean;
+  /** Already granted before this dialog session opened — the checkbox can't be unset here. */
+  viewReadonly: boolean;
+  shareReadonly: boolean;
+};
+
 export type ProfileRecord = {
   id: string;
   describes: string;

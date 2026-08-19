@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { App, Button, Form, Input, InputNumber, Modal, Popconfirm, Segmented, Slider, Space } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
-import { useCreate, useDelete, useInvalidate, useList, useUpdate } from '@refinedev/core';
+import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
 import ImageUpload from './ImageUpload';
@@ -10,7 +10,7 @@ import RecipientPicker from './RecipientPicker';
 import useActivityCollection from '../hooks/useActivityCollection';
 import useOutbox from '../hooks/useOutbox';
 import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
-import type { AnnonceKind, AnnonceRecord, LocationRecord } from '../types';
+import type { AnnonceKind, AnnonceRecord, Identity, InvitationState, LocationRecord } from '../types';
 
 export type ComposerMode = 'create' | 'edit' | 'share';
 
@@ -57,24 +57,43 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
   const [form] = Form.useForm<FormValues>();
   const [kind, setKind] = useState<AnnonceKind>(initialKind);
   const [step, setStep] = useState<1 | 2>(mode === 'share' ? 2 : 1);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [invitations, setInvitations] = useState<Record<string, InvitationState>>({});
+  const [savedInvitations, setSavedInvitations] = useState<Record<string, InvitationState>>({});
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const { data: identity } = useGetIdentity<Identity>();
   const { mutateAsync: createAnnonce } = useCreate();
   const { mutateAsync: updateAnnonce } = useUpdate();
   const { mutateAsync: deleteAnnonce } = useDelete();
   const outbox = useOutbox();
   const invalidate = useInvalidate();
 
+  const creatorUri = annonce?.['dc:creator'];
+  const isCreator = mode === 'create' || creatorUri === identity?.id;
+
   const { items: alreadyShared } = useActivityCollection<string>(mode !== 'create' ? annonce?.['apods:announces'] : undefined);
+  const { items: alreadyAnnouncers } = useActivityCollection<string>(mode !== 'create' ? annonce?.['apods:announcers'] : undefined);
   const { result: locations } = useList<LocationRecord>({ resource: 'location', pagination: { mode: 'off' } });
+
+  // Populate present invitations: anyone already in `apods:announces`/`apods:announcers` is readonly.
+  useEffect(() => {
+    if (!open) return;
+    const initial: Record<string, InvitationState> = {};
+    [...alreadyShared, ...alreadyAnnouncers].forEach(webId => {
+      const canView = alreadyShared.includes(webId);
+      const canShare = alreadyAnnouncers.includes(webId);
+      initial[webId] = { canView, canShare, viewReadonly: canView, shareReadonly: canShare };
+    });
+    setInvitations(initial);
+    setSavedInvitations(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, alreadyShared, alreadyAnnouncers]);
 
   useEffect(() => {
     if (!open) return;
     setKind(initialKind);
     setStep(mode === 'share' ? 2 : 1);
-    setSelected([]);
     if (annonce) {
       const expirationDate = literalValue(annonce['maid:expirationDate']);
       const radius = annonce.location?.radius ? Number(annonce.location.radius) : 15;
@@ -142,14 +161,46 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         }
       }
 
-      if (annonceId && selected.length > 0) {
-        await outbox.post({
-          type: 'Announce',
-          actor: outbox.owner,
-          object: annonceId,
-          target: selected,
-          to: selected
-        });
+      if (annonceId) {
+        // Matches @activitypods/react's ShareDialog: the pod-provider's `announcer` service only
+        // understands these two shapes, not an `interop:delegationAllowed` flag on a plain Announce.
+        // - View-only invites: the creator posts `Announce` directly; a delegate instead posts
+        //   `Offer{Announce}` addressed to the creator, whose Pod does the actual Announce.
+        // - Share (delegation) rights: always `Offer{Announce}` addressed directly to the new
+        //   delegates — only the creator may grant this (gated by RecipientPicker's `isCreator`).
+        const actorsWithNewViewRight = Object.keys(invitations).filter(
+          uri => invitations[uri].canView && !savedInvitations[uri]?.canView
+        );
+        if (actorsWithNewViewRight.length > 0) {
+          if (isCreator) {
+            await outbox.post({
+              type: 'Announce',
+              actor: outbox.owner,
+              object: annonceId,
+              target: actorsWithNewViewRight,
+              to: actorsWithNewViewRight
+            });
+          } else if (creatorUri) {
+            await outbox.post({
+              type: 'Offer',
+              actor: outbox.owner,
+              object: { type: 'Announce', actor: outbox.owner, object: annonceId, target: actorsWithNewViewRight },
+              target: creatorUri,
+              to: creatorUri
+            });
+          }
+        }
+
+        const actorsWithNewShareRight = Object.keys(invitations).filter(uri => invitations[uri].canShare && !savedInvitations[uri]?.canShare);
+        if (isCreator && actorsWithNewShareRight.length > 0) {
+          await outbox.post({
+            type: 'Offer',
+            actor: outbox.owner,
+            object: { type: 'Announce', object: annonceId },
+            target: actorsWithNewShareRight,
+            to: actorsWithNewShareRight
+          });
+        }
       }
 
       invalidate({ resource: resourceUri, invalidates: ['list', 'detail'] });
@@ -262,7 +313,9 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
           </Form.Item>
         </Form>
       </div>
-      {step === 2 && <RecipientPicker alreadyShared={alreadyShared} selected={selected} onChange={setSelected} />}
+      {step === 2 && identity && (
+        <RecipientPicker invitations={invitations} organizerUri={creatorUri ?? identity.id} isCreator={isCreator} onChange={setInvitations} />
+      )}
     </Modal>
   );
 };

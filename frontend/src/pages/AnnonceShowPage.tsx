@@ -7,6 +7,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import AnnonceCard from '../components/AnnonceCard';
 import CommentList from '../components/CommentList';
 import PosterPanel from '../components/PosterPanel';
+import useActivityCollection from '../hooks/useActivityCollection';
 import useActorProfile from '../hooks/useActorProfile';
 import useComments from '../hooks/useComments';
 import { useComposer } from '../context/ComposerContext';
@@ -30,7 +31,9 @@ const AnnonceShowPage = () => {
   });
   const { data: author } = useActorProfile(annonce?.['dc:creator']);
   const { replies, isLoading: repliesLoading, sending, send } = useComments(annonce || ({} as AnnonceRecord));
+  const { items: announcers, isSuccess: announcersLoaded } = useActivityCollection<string>(annonce?.['apods:announcers']);
   const mine = !!annonce && annonce['dc:creator'] === identity?.id;
+  const canShare = mine || (announcersLoaded && !!identity && announcers.includes(identity.id));
 
   if (query.isLoading) return <Spin style={{ margin: 48 }} />;
   if (!annonce) return <Result status="404" title="Annonce introuvable" extra={<Link to="/annonces">Retour</Link>} />;
@@ -65,14 +68,14 @@ const AnnonceShowPage = () => {
             {annonce.name || `Annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
           </Title>
           {mine && (
-            <>
-              <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
-                Modifier
-              </Button>
-              <Button size="small" icon={<ShareAltOutlined />} onClick={() => openComposer({ mode: 'share', kind, annonce })}>
-                Partager
-              </Button>
-            </>
+            <Button size="small" icon={<EditOutlined />} onClick={() => openComposer({ mode: 'edit', kind, annonce })}>
+              Modifier
+            </Button>
+          )}
+          {canShare && (
+            <Button size="small" icon={<ShareAltOutlined />} onClick={() => openComposer({ mode: 'share', kind, annonce })}>
+              Partager
+            </Button>
           )}
         </div>
 
