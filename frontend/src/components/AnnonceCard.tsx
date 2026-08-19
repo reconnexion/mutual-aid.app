@@ -8,6 +8,7 @@ import ImageGallery from './ImageGallery';
 import LikeButton from './LikeButton';
 import useActorProfile from '../hooks/useActorProfile';
 import useActivityCollection from '../hooks/useActivityCollection';
+import useProfileUrl from '../hooks/useProfileUrl';
 import { useComposer } from '../context/ComposerContext';
 import { AVATAR_SIZE } from '../config/layout';
 import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
@@ -49,6 +50,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const { items: replies } = useActivityCollection(annonce.replies);
   const { items: sharedWith } = useActivityCollection<string>(annonce['apods:announces']);
   const { openComposer } = useComposer();
+  const profileUrl = useProfileUrl();
   const place = annonce.location;
   const images = imagesOf(annonce['pair:depictedBy']);
   const resourceType = resourceTypeOf(annonce, kind);
@@ -71,9 +73,9 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
       >
         <div style={{ padding: '10px 14px 8px' }}>
           <Space size={8} wrap style={{ marginBottom: 4 }}>
-            <Link to={`/profil/${encodeURIComponent(annonce['dc:creator'])}`}>
+            <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
               <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
-            </Link>
+            </a>
             <Text type="secondary" style={{ fontSize: 12 }}>
               {place?.name}
               {place?.radius ? ` · ${place.radius} km` : ''}

@@ -16,7 +16,6 @@ import AppShell from './components/AppShell';
 import HomePage from './pages/HomePage';
 import AnnonceListPage from './pages/AnnonceListPage';
 import AnnonceShowPage from './pages/AnnonceShowPage';
-import ProfilePage from './pages/ProfilePage';
 
 const App = () => (
   <BrowserRouter>
@@ -56,7 +55,6 @@ const App = () => (
             >
               <Route path="/annonces" element={<AnnonceListPage />} />
               <Route path="/annonces/:kind/:id" element={<AnnonceShowPage />} />
-              <Route path="/profil/:webId" element={<ProfilePage />} />
             </Route>
 
             <Route

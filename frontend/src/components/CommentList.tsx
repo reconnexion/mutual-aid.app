@@ -1,9 +1,9 @@
 import { Alert, Avatar, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { Link } from 'react-router';
 import dayjs from 'dayjs';
 
 import useActorProfile from '../hooks/useActorProfile';
+import useProfileUrl from '../hooks/useProfileUrl';
 import { AVATAR_SIZE } from '../config/layout';
 import type { ReplyRecord } from '../types';
 
@@ -13,6 +13,7 @@ const { Text } = Typography;
  *  replies appear left-aligned (white, like the ad itself) to stand out as "the owner's word". */
 const Comment = ({ reply, fromOwner }: { reply: ReplyRecord; fromOwner: boolean }) => {
   const { data: author } = useActorProfile(reply.attributedTo);
+  const profileUrl = useProfileUrl();
   const avatar = <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} size={AVATAR_SIZE} style={{ flex: '0 0 auto' }} />;
   const bubble = (
     <div
@@ -28,11 +29,11 @@ const Comment = ({ reply, fromOwner }: { reply: ReplyRecord; fromOwner: boolean 
         gap: 2
       }}
     >
-      <Link to={`/profil/${encodeURIComponent(reply.attributedTo || '')}`}>
+      <a href={reply.attributedTo && profileUrl(reply.attributedTo)} target="_blank" rel="noopener noreferrer">
         <Text strong style={{ fontSize: 13, color: fromOwner ? undefined : '#0958d9' }}>
           {author?.['vcard:given-name'] || 'Voisin·e'}
         </Text>
-      </Link>
+      </a>
       <div style={{ whiteSpace: 'pre-wrap' }}>{reply.content}</div>
       <Text type="secondary" style={{ fontSize: 11, alignSelf: 'flex-end' }}>
         {reply['dc:created'] ? dayjs(reply['dc:created']).fromNow() : ''}

@@ -70,7 +70,7 @@ const RecipientPicker = ({ alreadyShared, selected, onChange }: Props) => {
         <Alert
           type="warning"
           showIcon
-          message="Aucun contact pour le moment. Demandez à être mis en contact depuis la page profil d'un voisin."
+          message="Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des annonces."
         />
       )}
     </div>

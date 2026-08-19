@@ -1,9 +1,9 @@
 import { Avatar, Button, Typography } from 'antd';
 import { MessageOutlined, UserOutlined } from '@ant-design/icons';
-import { Link } from 'react-router';
 import dayjs from 'dayjs';
 
 import useActorProfile from '../hooks/useActorProfile';
+import useProfileUrl from '../hooks/useProfileUrl';
 import { literalValue } from '../utils/ontology';
 
 const { Title, Text } = Typography;
@@ -16,6 +16,7 @@ type Props = {
  *  they joined, and a way to reach them. Loosely modelled on La Carte des Savoirs' MemberPanel. */
 const PosterPanel = ({ webId }: Props) => {
   const { data: profile, actorCreated, isLoading } = useActorProfile(webId);
+  const profileUrl = useProfileUrl();
   const joinDate = literalValue(actorCreated);
 
   if (isLoading) return null;
@@ -45,11 +46,11 @@ const PosterPanel = ({ webId }: Props) => {
           </div>
         )}
         <div style={{ marginTop: 16 }}>
-          <Link to={`/profil/${encodeURIComponent(webId)}`}>
+          <a href={profileUrl(webId)} target="_blank" rel="noopener noreferrer">
             <Button type="primary" icon={<MessageOutlined />}>
               Contacter
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </div>
