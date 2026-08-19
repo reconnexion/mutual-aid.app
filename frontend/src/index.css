@@ -7,3 +7,26 @@ a {
   color: #1677ff;
   text-decoration: none;
 }
+
+/** The app's wordmark ("L'Entraide" in the sidebar header) — a warmer, friendlier display face
+ *  than the default UI font, reserved for the brand itself. */
+.app-brand {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+}
+
+/** Sidebar header and primary buttons share the same light gradient, matching the mockup's
+ *  identity more closely than a flat fill. */
+.app-header-gradient {
+  background: linear-gradient(135deg, #1677ff 0%, #4c9aff 100%) !important;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled) {
+  background: linear-gradient(135deg, #1677ff 0%, #4c9aff 100%);
+  border-color: transparent;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):hover,
+.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):focus {
+  background: linear-gradient(135deg, #0e5fd8 0%, #3c8bff 100%);
+}

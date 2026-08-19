@@ -22,6 +22,9 @@ export type PlaceRecord = {
 export type AnnonceRecord = {
   id: string;
   type?: string | string[];
+  /** Short title (AS2 `as:name`, compacted to the bare `name` key) — shown in the detail page
+   *  header and used in notifications. */
+  name?: string;
   /** The ad's free-text body. */
   content?: string;
   location?: PlaceRecord;

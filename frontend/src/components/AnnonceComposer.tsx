@@ -20,9 +20,9 @@ type Props = {
   /** For `create`: the initially selected kind (still changeable in the form). For `edit`/`share`: derived from `annonce`. */
   kind: AnnonceKind;
   annonce?: AnnonceRecord;
-  /** Pre-fills "Votre annonce" in `create` mode — e.g. text already typed into the list page's
+  /** Pre-fills "Titre" in `create` mode — e.g. text already typed into the list page's
    *  bottom bar before the dialog was opened. */
-  initialContent?: string;
+  initialTitle?: string;
   onClose: () => void;
   onSaved?: () => void;
 };
@@ -33,6 +33,7 @@ const RESOURCE_TYPE_PREDICATE: Record<AnnonceKind, string> = {
 };
 
 type FormValues = {
+  title: string;
   content: string;
   resourceType: 'pair:AtomBasedResource' | 'pair:HumanBasedResource';
   locationId?: string;
@@ -51,7 +52,7 @@ const asPlace = (location: LocationRecord, radius: number) => ({
 
 /** Ad composer, matching the mockup: `create` is 2 steps (content, then who to share it with);
  *  `edit` and `share` are each a single step (either just the content, or just the recipients). */
-const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialContent, onClose, onSaved }: Props) => {
+const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle, onClose, onSaved }: Props) => {
   const { message } = App.useApp();
   const [form] = Form.useForm<FormValues>();
   const [kind, setKind] = useState<AnnonceKind>(initialKind);
@@ -78,6 +79,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
       const expirationDate = literalValue(annonce['maid:expirationDate']);
       const radius = annonce.location?.radius ? Number(annonce.location.radius) : 15;
       form.setFieldsValue({
+        title: annonce.name,
         content: annonce.content,
         resourceType: resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]]),
         radius,
@@ -86,10 +88,10 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ content: initialContent, resourceType: 'pair:AtomBasedResource', radius: 15, expiryDays: 30 });
+      form.setFieldsValue({ title: initialTitle, resourceType: 'pair:AtomBasedResource', radius: 15, expiryDays: 30 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, annonce, mode, initialContent]);
+  }, [open, annonce, mode, initialTitle]);
 
   // Defaults the "Localité" field to the home address once the saved-addresses list has loaded —
   // separate from the reset effect above so that adding a new address mid-composing (which also
@@ -124,6 +126,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
         const location = selectedLocation ? asPlace(selectedLocation, values.radius) : annonce?.location ? { ...annonce.location, radius: values.radius } : undefined;
 
         const variables: Record<string, any> = {
+          name: values.title,
           content: values.content,
           location,
           'pair:depictedBy': values.images,
@@ -239,8 +242,11 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialConten
               </Form.Item>
             )}
           </Space>
+          <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre annonce' }]}>
+            <Input placeholder="Ex. Je donne des outils de jardinage" />
+          </Form.Item>
           <Form.Item name="content" label="Votre annonce" rules={[{ required: true, message: 'Décrivez votre annonce' }]}>
-            <Input.TextArea rows={5} placeholder="Bonjour, je cherche…" />
+            <Input.TextArea rows={7} placeholder="Bonjour, je cherche…" />
           </Form.Item>
           <Form.Item name="images" label="Photos (optionnel, jusqu'à 10)">
             <ImageUpload />

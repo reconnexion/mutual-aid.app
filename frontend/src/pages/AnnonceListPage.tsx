@@ -26,9 +26,9 @@ const AnnonceListPage = () => {
   const filtered = items.filter(a => matchesFilter(a, filter, identity?.id));
 
   const startAnnonce = () => {
-    const content = draft;
+    const title = draft;
     setDraft('');
-    openComposer({ initialContent: content || undefined });
+    openComposer({ initialTitle: title || undefined });
   };
 
   return (
@@ -67,13 +67,14 @@ const AnnonceListPage = () => {
 
       <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px' }}>
         <Input
+          size="large"
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onPressEnter={startAnnonce}
           placeholder="Créer une nouvelle annonce"
-          style={{ borderRadius: 18 }}
+          style={{ borderRadius: 22, height: 48 }}
         />
-        <Button type="primary" shape="circle" icon={<SendOutlined />} onClick={startAnnonce} />
+        <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={startAnnonce} style={{ width: 48, height: 48 }} />
       </div>
     </div>
   );

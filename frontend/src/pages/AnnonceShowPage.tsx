@@ -61,8 +61,8 @@ const AnnonceShowPage = () => {
           }}
         >
           <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
-          <Title level={5} style={{ margin: 0, flex: 1, minWidth: 0 }}>
-            Annonce de {author?.['vcard:given-name'] || 'Voisin·e'}
+          <Title level={5} style={{ margin: 0, flex: 1, minWidth: 0 }} ellipsis>
+            {annonce.name || `Annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
           </Title>
           {mine && (
             <>
@@ -83,13 +83,14 @@ const AnnonceShowPage = () => {
 
         <div style={{ flex: '0 0 auto', display: 'flex', gap: 10, padding: '12px 16px' }}>
           <Input
+            size="large"
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onPressEnter={submitComment}
             placeholder="Écrire un commentaire"
-            style={{ borderRadius: 18 }}
+            style={{ borderRadius: 22, height: 48 }}
           />
-          <Button type="primary" shape="circle" icon={<SendOutlined />} onClick={submitComment} loading={sending} />
+          <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={submitComment} loading={sending} style={{ width: 48, height: 48 }} />
         </div>
       </div>
 

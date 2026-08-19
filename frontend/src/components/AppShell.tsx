@@ -38,6 +38,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
         <Sider width={360} theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
           <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
             <div
+              className="app-header-gradient"
               style={{
                 flex: `0 0 ${HEADER_HEIGHT}px`,
                 height: HEADER_HEIGHT,
@@ -46,13 +47,12 @@ const AppShell = ({ children }: { children: ReactNode }) => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: 12,
-                padding: '0 16px',
-                background: '#1677ff'
+                padding: '0 16px'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 22 }}>🤝</span>
-                <Text strong style={{ color: '#fff', fontSize: 16 }}>
+                <Text strong className="app-brand" style={{ color: '#fff', fontSize: 19 }}>
                   {APP_NAME}
                 </Text>
               </div>
@@ -104,7 +104,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
             mode={composerRequest.mode}
             kind={composerRequest.kind}
             annonce={composerRequest.annonce}
-            initialContent={composerRequest.initialContent}
+            initialTitle={composerRequest.initialTitle}
             onClose={() => setComposerRequest(null)}
           />
         )}
