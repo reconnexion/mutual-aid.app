@@ -124,14 +124,28 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, annonce, mode, initialTitle]);
 
-  // Defaults the "Localité" field to the home address once the saved-addresses list has loaded —
-  // separate from the reset effect above so that adding a new address mid-composing (which also
-  // changes `locations.data`) doesn't wipe fields the user has already filled in.
+  // Derives the "Localité" field once the saved-addresses list has loaded — separate from the
+  // reset effect above so that adding a new address mid-composing (which also changes
+  // `locations.data`) doesn't wipe fields the user has already filled in.
   useEffect(() => {
-    if (!open || mode !== 'create' || form.getFieldValue('locationId')) return;
-    const home = locations.data.find(l => l['vcard:TYPE'] === 'home');
-    if (home) form.setFieldValue('locationId', home.id);
-  }, [open, mode, locations.data, form]);
+    if (!open || form.getFieldValue('locationId')) return;
+    if (mode === 'create') {
+      const home = locations.data.find(l => l['vcard:TYPE'] === 'home');
+      if (home) form.setFieldValue('locationId', home.id);
+    } else if (annonce?.location) {
+      // `annonce.location` is an embedded snapshot copied at submit time (see `PlaceRecord`), not
+      // a reference to a saved `LocationRecord` — match it back to one by name/coordinates so the
+      // "Localité" dropdown reflects it. No match (e.g. the saved address was since edited or
+      // deleted) just leaves it unselected; the ad's own location is unaffected either way.
+      const match = locations.data.find(
+        l =>
+          l['vcard:given-name'] === annonce.location?.name &&
+          l['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:latitude'] === annonce.location?.latitude &&
+          l['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:longitude'] === annonce.location?.longitude
+      );
+      if (match) form.setFieldValue('locationId', match.id);
+    }
+  }, [open, mode, annonce, locations.data, form]);
 
   const isMultiStep = mode === 'create';
   const heading = mode === 'edit' ? 'Modifier la petite annonce' : mode === 'share' ? 'Partager la petite annonce' : 'Poster une petite annonce';
@@ -294,6 +308,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
       }
       width={isMobile ? 'calc(100vw - 32px)' : 640}
       style={isMobile ? { top: 16 } : undefined}
+      centered={!isMobile}
       destroyOnHidden
     >
       <div style={{ display: step === 1 ? 'block' : 'none' }}>

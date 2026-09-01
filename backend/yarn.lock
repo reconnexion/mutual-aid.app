@@ -1204,9 +1204,9 @@ canonicalize@^2.1.0:
   resolved "https://registry.yarnpkg.com/canonicalize/-/canonicalize-2.1.0.tgz#92a20ecfb94e96591badf4977dc2fb1bfbc31dc5"
   integrity sha512-F705O3xrsUtgt98j7leetNhTWPe+5S72rlL5O4jA1pKqBVQ/dT1O1D6PFxmSXvc0SUOinWS57DKx0I3CHrXJHQ==
 
-"cas@git+https://github.com/joshchan/node-cas.git":
+"cas@https://github.com/joshchan/node-cas":
   version "0.0.5"
-  resolved "git+https://github.com/joshchan/node-cas.git#ea512be2afd7d0b63de512a974705883b7d7070a"
+  resolved "https://github.com/joshchan/node-cas#ea512be2afd7d0b63de512a974705883b7d7070a"
   dependencies:
     cheerio "1.2.0"
 
