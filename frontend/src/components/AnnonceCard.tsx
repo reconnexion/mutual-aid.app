@@ -10,7 +10,7 @@ import useActivityCollection from '../hooks/useActivityCollection';
 import useProfileUrl from '../hooks/useProfileUrl';
 import { formatUsername } from '../utils/formatUsername';
 import { AVATAR_SIZE } from '../config/layout';
-import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
+import { imagesOf, isExpired, literalValue, resourceTypeCurie } from '../utils/ontology';
 import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Paragraph, Text } = Typography;
@@ -23,14 +23,16 @@ export const resourceTypeOf = (annonce: AnnonceRecord, kind: AnnonceKind) =>
 
 export const SUB_LABEL: Record<string, string> = {
   'pair:AtomBasedResource': 'Matériel',
-  'pair:HumanBasedResource': 'Compétence'
+  'pair:HumanBasedResource': 'Compétence',
+  'pair:Resource': 'Autre'
 };
 
 export const expiryLabel = (annonce: AnnonceRecord) => {
   const expirationDate = literalValue(annonce['maid:expirationDate']);
   if (!expirationDate) return 'Sans expiration';
+  // Same test as the feed's masking, so an ad is never both listed and labelled "Expirée".
+  if (isExpired(annonce)) return 'Expirée';
   const days = dayjs(expirationDate).diff(dayjs(), 'day');
-  if (days < 0) return 'Expirée';
   if (days === 0) return "Expire aujourd'hui";
   return `Expire dans ${days} j`;
 };

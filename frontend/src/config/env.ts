@@ -13,3 +13,7 @@ export const SHAPE_REPOSITORY_URL = import.meta.env.VITE_SHAPE_REPOSITORY_URL as
 export const DEFAULT_POD_PROVIDER = import.meta.env.VITE_POD_PROVIDER_BASE_URL as string | undefined;
 
 export const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
+
+/** PorteJunes' URL, for the "Envoyer des Ğ1" handoff button (see `config/portejunes.ts`).
+ *  Unset hides the button. */
+export const PORTEJUNES_URL = import.meta.env.VITE_PORTEJUNES_URL as string | undefined;

@@ -11,7 +11,7 @@ import useActivityCollection from '../hooks/useActivityCollection';
 import useIsMobile from '../hooks/useIsMobile';
 import useOutbox from '../hooks/useOutbox';
 import { imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
-import type { AnnonceKind, AnnonceRecord, Identity, InvitationState, LocationRecord } from '../types';
+import type { AnnonceKind, AnnonceRecord, Identity, InvitationState, LocationRecord, ResourceType } from '../types';
 
 export type ComposerMode = 'create' | 'edit' | 'share';
 
@@ -46,7 +46,7 @@ const CONTENT_PLACEHOLDER: Record<AnnonceKind, string> = {
 type FormValues = {
   title: string;
   content: string;
-  resourceType: 'pair:AtomBasedResource' | 'pair:HumanBasedResource';
+  resourceType: ResourceType;
   locationId?: string;
   radius: number;
   expiryDays: number;
@@ -327,7 +327,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
                 <Segmented
                   options={[
                     { label: 'Matériel', value: 'pair:AtomBasedResource' },
-                    { label: 'Compétence', value: 'pair:HumanBasedResource' }
+                    { label: 'Compétence', value: 'pair:HumanBasedResource' },
+                    { label: 'Autre', value: 'pair:Resource' }
                   ]}
                 />
               </Form.Item>

@@ -19,6 +19,11 @@ export type PlaceRecord = {
   radius?: number;
 };
 
+/** What an ad is about: material goods, a skill/service, or anything else. Same `pair:` classes
+ *  as the previous (react-admin) version of L'Entraide used, `pair:Resource` being the generic
+ *  superclass of the two others — hence "Autre". */
+export type ResourceType = 'pair:AtomBasedResource' | 'pair:HumanBasedResource' | 'pair:Resource';
+
 export type AnnonceRecord = {
   id: string;
   type?: string | string[];
@@ -29,9 +34,9 @@ export type AnnonceRecord = {
   content?: string;
   location?: PlaceRecord;
   /** Only set on offers. */
-  'maid:offerOfResourceType'?: 'pair:AtomBasedResource' | 'pair:HumanBasedResource';
+  'maid:offerOfResourceType'?: ResourceType;
   /** Only set on requests. */
-  'maid:requestOfResourceType'?: 'pair:AtomBasedResource' | 'pair:HumanBasedResource';
+  'maid:requestOfResourceType'?: ResourceType;
   /** Optional expiration date; absent means the ad never expires. */
   'maid:expirationDate'?: string;
   /** Up to 10 photos — read with `imagesOf()` from `utils/ontology`, since a single value comes

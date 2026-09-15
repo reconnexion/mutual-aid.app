@@ -1,12 +1,16 @@
-import { Avatar, Button, Typography } from 'antd';
+import { Avatar, Button, Space, Typography } from 'antd';
 import { MessageOutlined, UserOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 import useActorProfile from '../hooks/useActorProfile';
+import useOwnActor from '../hooks/useOwnActor';
 import useProfileUrl from '../hooks/useProfileUrl';
 import { formatUsername } from '../utils/formatUsername';
 import { HEADER_HEIGHT } from '../config/layout';
-import { literalValue } from '../utils/ontology';
+import { portejunesPayUrl } from '../config/portejunes';
+import { hasTipjarValue, literalValue } from '../utils/ontology';
+import { authProvider } from '../providers';
+import G1Icon from './G1Icon';
 
 const { Title, Text } = Typography;
 
@@ -20,9 +24,17 @@ type Props = {
 /** Right-hand panel showing who posted the ad being viewed — avatar, name, handle, a short bio,
  *  when they joined, and a way to reach them. Loosely modelled on La Carte des Savoirs' MemberPanel. */
 const PosterPanel = ({ webId, embedded = false }: Props) => {
-  const { data: profile, actorCreated, isLoading } = useActorProfile(webId);
+  const { data: profile, actorCreated, hasWallet, isLoading } = useActorProfile(webId);
   const profileUrl = useProfileUrl();
   const joinDate = literalValue(actorCreated);
+
+  // Same gating as La Carte des Savoirs' MemberPanel: both sides need a wallet. The recipient
+  // obviously needs one to be paid at all, and there's no point sending the connected user to
+  // PorteJunes if they don't have one themselves either -- that would just be a dead end there.
+  const isSelf = webId === authProvider.getSession()?.webId;
+  const { data: ownActor } = useOwnActor();
+  const ownHasWallet = hasTipjarValue(ownActor?.['foaf:tipjar']);
+  const payUrl = !isSelf && hasWallet && ownHasWallet ? portejunesPayUrl(webId) : undefined;
 
   const content = !isLoading && (
     <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
@@ -53,13 +65,18 @@ const PosterPanel = ({ webId, embedded = false }: Props) => {
             </Text>
           </div>
         )}
-        <div style={{ marginTop: 16 }}>
+        <Space direction="vertical" align="center" style={{ marginTop: 16 }}>
           <a href={profileUrl(webId)} target="_blank" rel="noopener noreferrer">
             <Button type="primary" icon={<MessageOutlined />}>
               Contacter
             </Button>
           </a>
-        </div>
+          {payUrl && (
+            <Button icon={<G1Icon />} href={payUrl} target="_blank" rel="noopener noreferrer">
+              Envoyer des Ğ1
+            </Button>
+          )}
+        </Space>
       </div>
     </div>
   );
