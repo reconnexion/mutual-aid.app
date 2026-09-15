@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Button, Layout, Typography } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { HeartFilled, PlusOutlined } from '@ant-design/icons';
 import { useGetIdentity } from '@refinedev/core';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -11,7 +11,7 @@ import MobileNavContext from '../context/MobileNavContext';
 import useAnnonces from '../hooks/useAnnonces';
 import useIsMobile from '../hooks/useIsMobile';
 import { FILTER_ROWS, matchesFilter, type FilterId } from '../config/filters';
-import { APP_NAME } from '../config/env';
+import { APP_NAME, DONATION_URL } from '../config/env';
 import { HEADER_HEIGHT } from '../config/layout';
 import type { Identity } from '../types';
 
@@ -99,6 +99,20 @@ const AppShell = ({ children }: { children: ReactNode }) => {
         <Button type="primary" icon={<PlusOutlined />} block onClick={() => openComposer()} style={{ height: 42 }}>
           Poster une petite annonce
         </Button>
+        {DONATION_URL && (
+          <Button
+            type="text"
+            size="small"
+            icon={<HeartFilled style={{ color: '#ff4d4f' }} />}
+            href={DONATION_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            block
+            style={{ marginTop: 8, color: 'rgba(0,0,0,0.88)' }}
+          >
+            Soutenir cette application
+          </Button>
+        )}
       </div>
     </div>
   );

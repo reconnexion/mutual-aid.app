@@ -51,6 +51,7 @@ services:
         VITE_POD_PROVIDER_BASE_URL: $POD_PROVIDER_BASE_URL
         VITE_MAPBOX_ACCESS_TOKEN: $MAPBOX_ACCESS_TOKEN
         VITE_PORTEJUNES_URL: $PORTEJUNES_URL
+        VITE_DONATION_URL: $DONATION_URL
     image: $FRONTEND_DOCKER_IMAGE
     container_name: frontend
     restart: always

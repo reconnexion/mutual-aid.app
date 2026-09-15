@@ -17,3 +17,6 @@ export const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as s
 /** PorteJunes' URL, for the "Envoyer des Ğ1" handoff button (see `config/portejunes.ts`).
  *  Unset hides the button. */
 export const PORTEJUNES_URL = import.meta.env.VITE_PORTEJUNES_URL as string | undefined;
+
+/** Where "Soutenir cette application" (bottom of the sidebar) sends people. Unset hides the link. */
+export const DONATION_URL = import.meta.env.VITE_DONATION_URL as string | undefined;

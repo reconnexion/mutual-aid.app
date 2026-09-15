@@ -10,7 +10,8 @@ import useActivityCollection from '../hooks/useActivityCollection';
 import useProfileUrl from '../hooks/useProfileUrl';
 import { formatUsername } from '../utils/formatUsername';
 import { AVATAR_SIZE } from '../config/layout';
-import { imagesOf, isExpired, literalValue, resourceTypeCurie } from '../utils/ontology';
+import { exchangeTypeCurie, imagesOf, isExpired, literalValue, resourceTypeCurie } from '../utils/ontology';
+import { exchangeTypeLabel } from '../config/exchangeTypes';
 import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Paragraph, Text } = Typography;
@@ -53,6 +54,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const place = annonce.location;
   const images = imagesOf(annonce['pair:depictedBy']);
   const resourceType = resourceTypeOf(annonce, kind);
+  const exchangeLabel = exchangeTypeLabel(exchangeTypeCurie(annonce['pair:hasType']));
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
 
   return (
@@ -86,6 +88,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
             )}
             <Tag color={CAT_COLOR[kind]}>{CAT_LABEL[kind]}</Tag>
             {resourceType && <Tag color="geekblue">{SUB_LABEL[resourceType] || resourceType}</Tag>}
+            {exchangeLabel && <Tag color="gold">{exchangeLabel}</Tag>}
           </Space>
           <Link to={detailUrl} style={{ color: 'inherit' }}>
             <Paragraph ellipsis={showFooter ? { rows: 3 } : false} style={{ whiteSpace: 'pre-wrap', marginBottom: images.length ? 12 : 8 }}>

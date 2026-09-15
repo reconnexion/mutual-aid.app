@@ -1,4 +1,4 @@
-import type { ResourceType } from '../types';
+import type { ExchangeType, ResourceType } from '../types';
 
 /** `maid:offerOfResourceType` / `maid:requestOfResourceType` are typed `@type: "@id"` in the
  *  backend's JSON-LD context (see `backend/services/core/core.service.js`), so a GET returns
@@ -13,6 +13,18 @@ export const resourceTypeCurie = (value: unknown): ResourceType | undefined => {
   // Checked last, since the two above also end with "Resource" (full IRI is `pair#Resource`).
   if (iri.endsWith('#Resource') || iri === 'pair:Resource') return 'pair:Resource';
   return undefined;
+};
+
+const EXCHANGE_TYPE_NAMES = ['GiftOffer', 'BarterOffer', 'SaleOffer', 'LoanOffer', 'GiftRequest', 'BarterRequest', 'PurchaseRequest', 'LoanRequest'];
+
+/** Same normalization as `resourceTypeCurie` for `pair:hasType` (typed `@type: "@id"` in the
+ *  pair context): `{ id: "https://mutual-aid.app/ns/core#GiftOffer" }` or `'maid:GiftOffer'`
+ *  both become `'maid:GiftOffer'`. Unknown values yield `undefined`. */
+export const exchangeTypeCurie = (value: unknown): ExchangeType | undefined => {
+  const iri = typeof value === 'string' ? value : (value as { id?: string } | undefined)?.id;
+  if (!iri) return undefined;
+  const name = iri.split(/[#:/]/).pop();
+  return name && EXCHANGE_TYPE_NAMES.includes(name) ? (`maid:${name}` as ExchangeType) : undefined;
 };
 
 /** Typed literals (e.g. `maid:expirationDate`, `@type: "xsd:dateTime"`) can come back as a plain

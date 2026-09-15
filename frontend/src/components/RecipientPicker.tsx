@@ -4,6 +4,7 @@ import { Alert, Avatar, Input, List, Switch, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 
 import type { Identity, InvitationState, ProfileRecord } from '../types';
+import { distanceKm, geoPoint, type GeoPoint } from '../utils/geo';
 
 const { Text } = Typography;
 
@@ -12,13 +13,17 @@ type Props = {
   organizerUri: string;
   /** Whether the current user may grant "can re-share" rights — only the ad's own creator can. */
   isCreator: boolean;
+  /** The ad's location and sharing radius, when it's geolocated. Contacts whose (approximate)
+   *  home position is known and lies beyond `radiusKm` are left out of the list; those whose
+   *  position isn't known are kept — the radius just can't be applied to them. */
+  place?: GeoPoint & { radiusKm?: number };
   onChange: (invitations: Record<string, InvitationState>) => void;
 };
 
 /** Recipient checklist for sharing an ad, over the `apods:contacts`-derived `profile` list (only
  *  people the app can already read a profile for — i.e. mutual contacts). Each contact gets a
  *  "Voir" toggle and, for the creator only, a "Partager" toggle granting re-share rights. */
-const RecipientPicker = ({ invitations, organizerUri, isCreator, onChange }: Props) => {
+const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange }: Props) => {
   const { data: identity } = useGetIdentity<Identity>();
   const [search, setSearch] = useState('');
 
@@ -28,22 +33,48 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, onChange }: Pro
     sorters: [{ field: 'vcard:given-name', order: 'asc' }]
   });
 
-  const contacts = useMemo(
-    () =>
-      result.data
-        .filter(profile => profile.describes !== organizerUri && profile.describes !== identity?.id)
-        .filter(profile => (profile['vcard:given-name'] || '').toLowerCase().includes(search.toLowerCase())),
-    [result, search, organizerUri, identity]
-  );
+  // Distance from the ad for each contact with a known position — computed client-side from the
+  // profiles already fetched above, so it costs nothing extra. Contacts already granted access
+  // (readonly toggles) stay listed even when out of range: hiding them wouldn't revoke anything.
+  const { contacts, outOfRange } = useMemo(() => {
+    const withDistance = result.data
+      .filter(profile => profile.describes !== organizerUri && profile.describes !== identity?.id)
+      .map(profile => {
+        const position = geoPoint(profile['vcard:hasGeo']);
+        const distance = place && position ? distanceKm(place, position) : undefined;
+        return { profile, distance };
+      });
+    const inRange = ({ profile, distance }: (typeof withDistance)[number]) =>
+      distance === undefined ||
+      place?.radiusKm === undefined ||
+      distance <= place.radiusKm ||
+      !!invitations[profile.describes]?.viewReadonly;
+    return {
+      contacts: withDistance
+        .filter(inRange)
+        .filter(({ profile }) => (profile['vcard:given-name'] || '').toLowerCase().includes(search.toLowerCase())),
+      outOfRange: withDistance.filter(c => !inRange(c)).length
+    };
+  }, [result, search, organizerUri, identity, place, invitations]);
 
   const changeCanView = (webId: string) => {
-    const state = invitations[webId] ?? { canView: false, canShare: false, viewReadonly: false, shareReadonly: !isCreator };
+    const state = invitations[webId] ?? {
+      canView: false,
+      canShare: false,
+      viewReadonly: false,
+      shareReadonly: !isCreator
+    };
     const canView = !state.canView;
     onChange({ ...invitations, [webId]: { ...state, canView, canShare: canView && state.canShare } });
   };
 
   const changeCanShare = (webId: string) => {
-    const state = invitations[webId] ?? { canView: false, canShare: false, viewReadonly: false, shareReadonly: !isCreator };
+    const state = invitations[webId] ?? {
+      canView: false,
+      canShare: false,
+      viewReadonly: false,
+      shareReadonly: !isCreator
+    };
     const canShare = !state.canShare;
     onChange({ ...invitations, [webId]: { ...state, canShare, canView: canShare || state.canView } });
   };
@@ -61,24 +92,46 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, onChange }: Pro
         loading={query.isLoading}
         dataSource={contacts}
         locale={{ emptyText: ' ' }}
-        renderItem={profile => {
+        renderItem={({ profile, distance }) => {
           const webId = profile.describes;
-          const state: InvitationState = invitations[webId] ?? { canView: false, canShare: false, viewReadonly: false, shareReadonly: !isCreator };
+          const state: InvitationState = invitations[webId] ?? {
+            canView: false,
+            canShare: false,
+            viewReadonly: false,
+            shareReadonly: !isCreator
+          };
           return (
             <List.Item style={{ paddingLeft: 0, paddingRight: 0, gap: 12, flexWrap: 'wrap' }}>
               <List.Item.Meta
                 avatar={<Avatar src={profile['vcard:photo']} icon={<UserOutlined />} size="small" />}
-                title={<Text>{profile['vcard:given-name']}</Text>}
+                title={
+                  <Text>
+                    {profile['vcard:given-name']}
+                    {distance !== undefined && (
+                      <Text type="secondary" style={{ marginLeft: 8, fontWeight: 'normal' }}>
+                        {distance < 1 ? '< 1 km' : `${Math.round(distance)} km`}
+                      </Text>
+                    )}
+                  </Text>
+                }
               />
               <div style={{ display: 'flex', gap: 24 }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>Voir</div>
-                  <Switch checked={state.canView || state.canShare} disabled={state.viewReadonly} onChange={() => changeCanView(webId)} />
+                  <Switch
+                    checked={state.canView || state.canShare}
+                    disabled={state.viewReadonly}
+                    onChange={() => changeCanView(webId)}
+                  />
                 </div>
                 {isCreator && (
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>Partager</div>
-                    <Switch checked={state.canShare} disabled={state.shareReadonly} onChange={() => changeCanShare(webId)} />
+                    <Switch
+                      checked={state.canShare}
+                      disabled={state.shareReadonly}
+                      onChange={() => changeCanShare(webId)}
+                    />
                   </div>
                 )}
               </div>
@@ -86,11 +139,21 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, onChange }: Pro
           );
         }}
       />
+      {outOfRange > 0 && (
+        <Text type="secondary" style={{ display: 'block', fontSize: 12, marginTop: 8 }}>
+          {outOfRange} contact{outOfRange > 1 ? 's' : ''} situé{outOfRange > 1 ? 's' : ''} au-delà de {place?.radiusKm}{' '}
+          km non affiché{outOfRange > 1 ? 's' : ''}.
+        </Text>
+      )}
       {!query.isLoading && contacts.length === 0 && (
         <Alert
           type="warning"
           showIcon
-          message="Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des petites annonces."
+          message={
+            outOfRange > 0
+              ? `Aucun contact dans un rayon de ${place?.radiusKm} km. Élargissez le rayon ou désactivez la géolocalisation de votre petite annonce.`
+              : 'Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des petites annonces.'
+          }
         />
       )}
     </div>

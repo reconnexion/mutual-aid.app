@@ -158,6 +158,7 @@ FUSEKI_PASSWORD=
 MAPBOX_ACCESS_TOKEN=
 POD_PROVIDER_BASE_URL=  # If you want to enforce a Pod provider for this app
 PORTEJUNES_URL=  # If set, shows an "Envoyer des Ğ1" button on ad posters' profiles
+DONATION_URL=  # If set, shows a "Soutenir cette application" link at the bottom of the sidebar
 ```
 
 If you want to customize more thoroughly the app, you can do the same with the `.env.production` files in the /backend and /frontend directories (copy them to a `.env.production.local` file). Note all env files ending with `.local` are not commited.

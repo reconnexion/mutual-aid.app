@@ -24,6 +24,18 @@ export type PlaceRecord = {
  *  superclass of the two others — hence "Autre". */
 export type ResourceType = 'pair:AtomBasedResource' | 'pair:HumanBasedResource' | 'pair:Resource';
 
+/** How the exchange happens (`pair:hasType`, same `maid:` classes as the previous version of
+ *  L'Entraide) — see `config/exchangeTypes.ts` for labels and which apply to offers vs requests. */
+export type ExchangeType =
+  | 'maid:GiftOffer'
+  | 'maid:BarterOffer'
+  | 'maid:SaleOffer'
+  | 'maid:LoanOffer'
+  | 'maid:GiftRequest'
+  | 'maid:BarterRequest'
+  | 'maid:PurchaseRequest'
+  | 'maid:LoanRequest';
+
 export type AnnonceRecord = {
   id: string;
   type?: string | string[];
@@ -37,6 +49,9 @@ export type AnnonceRecord = {
   'maid:offerOfResourceType'?: ResourceType;
   /** Only set on requests. */
   'maid:requestOfResourceType'?: ResourceType;
+  /** Don / troc / vente… Absent on ads posted before this was (re)introduced. Read with
+   *  `exchangeTypeCurie()` from `utils/ontology` (`@type: "@id"` in the pair context). */
+  'pair:hasType'?: ExchangeType | { id: string };
   /** Optional expiration date; absent means the ad never expires. */
   'maid:expirationDate'?: string;
   /** Up to 10 photos — read with `imagesOf()` from `utils/ontology`, since a single value comes
@@ -78,6 +93,9 @@ export type ProfileRecord = {
   describes: string;
   'vcard:given-name'?: string;
   'vcard:photo'?: string;
+  /** Approximate home position (the Pod provider fuzzes it by ~1 km before exposing it to
+   *  contacts) — absent when the person hasn't set a home address. */
+  'vcard:hasGeo'?: { 'vcard:latitude'?: number | string; 'vcard:longitude'?: number | string };
   [key: string]: any;
 };
 
