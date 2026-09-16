@@ -1,4 +1,5 @@
 import { Image } from 'antd';
+import { useTranslate } from '@refinedev/core';
 
 type Props = {
   images: string[];
@@ -25,6 +26,7 @@ const IMG_STYLE = { width: '100%', height: '100%', objectFit: 'cover' as const, 
  *  up unsized on some viewports, letting the image overflow past its container's rounded corners
  *  on one edge only. */
 const ImageGallery = ({ images }: Props) => {
+  const translate = useTranslate();
   if (images.length === 0) return null;
 
   if (images.length === 1) {
@@ -80,7 +82,7 @@ const ImageGallery = ({ images }: Props) => {
                   pointerEvents: 'none'
                 }}
               >
-                +{extra} photo{extra > 1 ? 's' : ''}
+                {translate('gallery.more', { count: extra })}
               </div>
             )}
           </div>

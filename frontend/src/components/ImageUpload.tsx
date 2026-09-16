@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { App, Upload } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
+import { useTranslate } from '@refinedev/core';
 
 import useUploadImage from '../hooks/useUploadImage';
 
@@ -20,6 +21,7 @@ const toFileList = (urls: string[]): UploadFile[] =>
  *  upload promise) to stay correct when several files upload concurrently. */
 const ImageUpload = ({ value = [], onChange }: Props) => {
   const { message } = App.useApp();
+  const translate = useTranslate();
   const uploadImage = useUploadImage();
   const [fileList, setFileList] = useState<UploadFile[]>(() => toFileList(value));
 
@@ -61,7 +63,7 @@ const ImageUpload = ({ value = [], onChange }: Props) => {
       {fileList.length >= MAX_IMAGES ? null : (
         <div>
           <PlusOutlined />
-          <div style={{ marginTop: 8 }}>Ajouter</div>
+          <div style={{ marginTop: 8 }}>{translate('upload.add')}</div>
         </div>
       )}
     </Upload>

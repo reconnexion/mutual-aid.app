@@ -4,27 +4,32 @@ import routerProvider, { CatchAllNavigate, UnsavedChangesNotifier } from '@refin
 import { AntdAuthPage } from '@activitypods/refine-providers/antd-auth-page';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router';
 import { App as AntdApp, ConfigProvider } from 'antd';
+import enUS from 'antd/locale/en_US';
 import frFR from 'antd/locale/fr_FR';
 
 import '@refinedev/antd/dist/reset.css';
 import './index.css';
 
 import { authProvider, dataProvider } from './providers';
-import { DEFAULT_POD_PROVIDER } from './config/env';
+import { i18nProvider } from './i18n';
+import { APP_LANG, DEFAULT_POD_PROVIDER } from './config/env';
 import theme from './theme';
 import AppShell from './components/AppShell';
 import HomePage from './pages/HomePage';
 import AnnonceListPage from './pages/AnnonceListPage';
 import AnnonceShowPage from './pages/AnnonceShowPage';
 
+const antdLocale = APP_LANG === 'fr' ? frFR : enUS;
+
 const App = () => (
   <BrowserRouter>
-    <ConfigProvider locale={frFR} theme={theme}>
+    <ConfigProvider locale={antdLocale} theme={theme}>
       <AntdApp>
         <Refine
           authProvider={authProvider}
           dataProvider={dataProvider}
           routerProvider={routerProvider}
+          i18nProvider={i18nProvider}
           resources={[{ name: 'offer' }, { name: 'request' }, { name: 'profile' }]}
           notificationProvider={useNotificationProvider}
           options={{

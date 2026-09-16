@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react';
 import { Button, Layout, Typography } from 'antd';
 import { HeartFilled, PlusOutlined } from '@ant-design/icons';
-import { useGetIdentity } from '@refinedev/core';
+import { useGetIdentity, useTranslate } from '@refinedev/core';
 import { useNavigate, useSearchParams } from 'react-router';
+import { AntdBackgroundChecks } from '@activitypods/refine-providers/antd-background-checks';
 
 import AnnonceComposer from './AnnonceComposer';
 import UserMenu from './UserMenu';
@@ -10,15 +11,24 @@ import ComposerContext, { type ComposerRequest } from '../context/ComposerContex
 import MobileNavContext from '../context/MobileNavContext';
 import useAnnonces from '../hooks/useAnnonces';
 import useIsMobile from '../hooks/useIsMobile';
+import useOwnActor from '../hooks/useOwnActor';
 import { FILTER_ROWS, matchesFilter, type FilterId } from '../config/filters';
 import { APP_NAME, DONATION_URL } from '../config/env';
+import { authProvider } from '../providers';
 import { HEADER_HEIGHT } from '../config/layout';
 import type { Identity } from '../types';
 
 const { Sider, Content } = Layout;
 const { Text } = Typography;
 
+/** Two-pane chrome around every authenticated page, wrapped — like welcometomyplace's
+ *  `PageLayout` — in `AntdBackgroundChecks`, which refuses to render the app while the backend
+ *  is offline, sends the user back through the consent screen when the app's access needs
+ *  changed, and checks the backend is listening to the user's inbox and outbox (it needs both:
+ *  `invitation.service.js` reacts to shares/comments emitted from the outbox and received in the
+ *  inbox). */
 const AppShell = ({ children }: { children: ReactNode }) => {
+  const translate = useTranslate();
   const { data: identity } = useGetIdentity<Identity>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -27,6 +37,9 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   // Mobile only: which of the two panes is showing right now (desktop always shows both).
   const [mobileShowContent, setMobileShowContent] = useState(false);
   const { items } = useAnnonces();
+  // `listeningTo` is empty until the actor document is loaded; the checks re-run once it is.
+  const { data: ownActor } = useOwnActor();
+  const listeningTo = [ownActor?.inbox, ownActor?.outbox].filter((uri): uri is string => !!uri);
 
   const activeFilter = (searchParams.get('filter') as FilterId) || 'all';
 
@@ -84,8 +97,16 @@ const AppShell = ({ children }: { children: ReactNode }) => {
               }}
             >
               {row.indent && <span style={{ flex: '0 0 14px' }} />}
-              <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: row.bold ? 600 : 400, color: 'rgba(0,0,0,0.88)' }}>
-                {row.label}
+              <span
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 14,
+                  fontWeight: row.bold ? 600 : 400,
+                  color: 'rgba(0,0,0,0.88)'
+                }}
+              >
+                {translate(row.labelKey)}
               </span>
               <Text type="secondary" style={{ fontSize: 12, lineHeight: '20px' }}>
                 {countFor(row.id)}
@@ -97,7 +118,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
 
       <div style={{ flex: '0 0 auto', padding: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} block onClick={() => openComposer()} style={{ height: 42 }}>
-          Poster une petite annonce
+          {translate('app.post_ad')}
         </Button>
         {DONATION_URL && (
           <Button
@@ -110,7 +131,7 @@ const AppShell = ({ children }: { children: ReactNode }) => {
             block
             style={{ marginTop: 8, color: 'rgba(0,0,0,0.88)' }}
           >
-            Soutenir cette application
+            {translate('app.support')}
           </Button>
         )}
       </div>
@@ -118,36 +139,42 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   );
 
   return (
-    <ComposerContext.Provider value={{ openComposer }}>
-      <MobileNavContext.Provider value={{ showContent: () => setMobileShowContent(true), showSidebar: () => setMobileShowContent(false) }}>
-        <Layout style={{ minHeight: '100vh' }}>
-          {isMobile ? (
-            mobileShowContent ? (
-              <Content style={{ background: '#f5f5f5', height: '100vh', overflow: 'hidden', width: '100%' }}>{children}</Content>
+    <AntdBackgroundChecks authProvider={authProvider} listeningTo={listeningTo}>
+      <ComposerContext.Provider value={{ openComposer }}>
+        <MobileNavContext.Provider
+          value={{ showContent: () => setMobileShowContent(true), showSidebar: () => setMobileShowContent(false) }}
+        >
+          <Layout style={{ minHeight: '100vh' }}>
+            {isMobile ? (
+              mobileShowContent ? (
+                <Content style={{ background: '#f5f5f5', height: '100vh', overflow: 'hidden', width: '100%' }}>
+                  {children}
+                </Content>
+              ) : (
+                <div style={{ width: '100%', background: '#fff' }}>{sidebar}</div>
+              )
             ) : (
-              <div style={{ width: '100%', background: '#fff' }}>{sidebar}</div>
-            )
-          ) : (
-            <>
-              <Sider width={360} theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
-                {sidebar}
-              </Sider>
-              <Content style={{ background: '#f5f5f5', height: '100vh', overflow: 'hidden' }}>{children}</Content>
-            </>
-          )}
-          {composerRequest && (
-            <AnnonceComposer
-              open
-              mode={composerRequest.mode}
-              kind={composerRequest.kind}
-              annonce={composerRequest.annonce}
-              initialTitle={composerRequest.initialTitle}
-              onClose={() => setComposerRequest(null)}
-            />
-          )}
-        </Layout>
-      </MobileNavContext.Provider>
-    </ComposerContext.Provider>
+              <>
+                <Sider width={360} theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
+                  {sidebar}
+                </Sider>
+                <Content style={{ background: '#f5f5f5', height: '100vh', overflow: 'hidden' }}>{children}</Content>
+              </>
+            )}
+            {composerRequest && (
+              <AnnonceComposer
+                open
+                mode={composerRequest.mode}
+                kind={composerRequest.kind}
+                annonce={composerRequest.annonce}
+                initialTitle={composerRequest.initialTitle}
+                onClose={() => setComposerRequest(null)}
+              />
+            )}
+          </Layout>
+        </MobileNavContext.Provider>
+      </ComposerContext.Provider>
+    </AntdBackgroundChecks>
   );
 };
 

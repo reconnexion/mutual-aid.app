@@ -1,5 +1,6 @@
 import { Alert, Avatar, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
+import { useTranslate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
 import useActorProfile from '../hooks/useActorProfile';
@@ -12,6 +13,7 @@ const { Text } = Typography;
 /** A comment bubble — right-aligned (light blue) for everyone except the ad's own creator, whose
  *  replies appear left-aligned (white, like the ad itself) to stand out as "the owner's word". */
 const Comment = ({ reply, fromOwner }: { reply: ReplyRecord; fromOwner: boolean }) => {
+  const translate = useTranslate();
   const { data: author } = useActorProfile(reply.attributedTo);
   const profileUrl = useProfileUrl();
   const avatar = <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} size={AVATAR_SIZE} style={{ flex: '0 0 auto' }} />;
@@ -31,7 +33,7 @@ const Comment = ({ reply, fromOwner }: { reply: ReplyRecord; fromOwner: boolean 
     >
       <a href={reply.attributedTo && profileUrl(reply.attributedTo)} target="_blank" rel="noopener noreferrer">
         <Text strong style={{ fontSize: 13, color: fromOwner ? undefined : '#0958d9' }}>
-          {author?.['vcard:given-name'] || 'Voisin·e'}
+          {author?.['vcard:given-name'] || translate('app.neighbour')}
         </Text>
       </a>
       <div style={{ whiteSpace: 'pre-wrap' }}>{reply.content}</div>
@@ -67,13 +69,16 @@ type Props = {
 
 /** Comment bubbles for the scrollable area of the ad detail page (see `useComments` for the
  *  reply-posting logic, rendered separately in the page's fixed bottom bar). */
-const CommentList = ({ replies, isLoading, annonceCreator }: Props) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-    {!isLoading && replies.length === 0 && <Alert type="info" message="Aucun commentaire pour le moment" showIcon />}
-    {replies.map(reply => (
-      <Comment key={reply.id} reply={reply} fromOwner={reply.attributedTo === annonceCreator} />
-    ))}
-  </div>
-);
+const CommentList = ({ replies, isLoading, annonceCreator }: Props) => {
+  const translate = useTranslate();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {!isLoading && replies.length === 0 && <Alert type="info" message={translate('comments.empty')} showIcon />}
+      {replies.map(reply => (
+        <Comment key={reply.id} reply={reply} fromOwner={reply.attributedTo === annonceCreator} />
+      ))}
+    </div>
+  );
+};
 
 export default CommentList;

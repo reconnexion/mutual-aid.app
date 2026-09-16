@@ -1,4 +1,4 @@
-import { useGetIdentity } from '@refinedev/core';
+import { useGetIdentity, useTranslate } from '@refinedev/core';
 import { Avatar, Dropdown, Space } from 'antd';
 import { AppstoreOutlined, DatabaseOutlined, LogoutOutlined, SettingOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons';
 
@@ -11,6 +11,7 @@ import type { Identity } from '../types';
  *  own network/apps/data/settings pages (discovered via nodeinfo) plus logout — the single
  *  entry point for account-level actions. */
 const UserMenu = () => {
+  const translate = useTranslate();
   const { data: identity, isLoading } = useGetIdentity<Identity>();
   const { data: nodeinfo } = useNodeinfo(identity?.id ? new URL(identity.id).host : undefined);
 
@@ -37,7 +38,7 @@ const UserMenu = () => {
                   key: 'network',
                   label: (
                     <a href={urlJoin(frontendUrl, 'network')} target="_blank" rel="noopener noreferrer">
-                      Réseau
+                      {translate('menu.network')}
                     </a>
                   ),
                   icon: <TeamOutlined />
@@ -46,7 +47,7 @@ const UserMenu = () => {
                   key: 'apps',
                   label: (
                     <a href={urlJoin(frontendUrl, 'apps')} target="_blank" rel="noopener noreferrer">
-                      Applications
+                      {translate('menu.apps')}
                     </a>
                   ),
                   icon: <AppstoreOutlined />
@@ -55,7 +56,7 @@ const UserMenu = () => {
                   key: 'data',
                   label: (
                     <a href={urlJoin(frontendUrl, 'data')} target="_blank" rel="noopener noreferrer">
-                      Mes données
+                      {translate('menu.data')}
                     </a>
                   ),
                   icon: <DatabaseOutlined />
@@ -64,7 +65,7 @@ const UserMenu = () => {
                   key: 'settings',
                   label: (
                     <a href={urlJoin(frontendUrl, 'settings')} target="_blank" rel="noopener noreferrer">
-                      Paramètres
+                      {translate('menu.settings')}
                     </a>
                   ),
                   icon: <SettingOutlined />
@@ -73,7 +74,7 @@ const UserMenu = () => {
             : []),
           {
             key: 'logout',
-            label: 'Se déconnecter',
+            label: translate('menu.logout'),
             icon: <LogoutOutlined />,
             onClick: () => handleLogout()
           }

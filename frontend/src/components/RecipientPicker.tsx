@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useGetIdentity, useList } from '@refinedev/core';
+import { useGetIdentity, useList, useTranslate } from '@refinedev/core';
 import { Alert, Avatar, Input, List, Switch, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 
@@ -24,6 +24,7 @@ type Props = {
  *  people the app can already read a profile for — i.e. mutual contacts). Each contact gets a
  *  "Voir" toggle and, for the creator only, a "Partager" toggle granting re-share rights. */
 const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange }: Props) => {
+  const translate = useTranslate();
   const { data: identity } = useGetIdentity<Identity>();
   const [search, setSearch] = useState('');
 
@@ -82,7 +83,7 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
   return (
     <div>
       <Input.Search
-        placeholder="Rechercher"
+        placeholder={translate('recipients.search')}
         value={search}
         onChange={e => setSearch(e.target.value)}
         style={{ marginBottom: 12 }}
@@ -117,7 +118,7 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
               />
               <div style={{ display: 'flex', gap: 24 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>Voir</div>
+                  <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>{translate('recipients.view')}</div>
                   <Switch
                     checked={state.canView || state.canShare}
                     disabled={state.viewReadonly}
@@ -126,7 +127,7 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
                 </div>
                 {isCreator && (
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>Partager</div>
+                    <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>{translate('recipients.share')}</div>
                     <Switch
                       checked={state.canShare}
                       disabled={state.shareReadonly}
@@ -141,8 +142,7 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
       />
       {outOfRange > 0 && (
         <Text type="secondary" style={{ display: 'block', fontSize: 12, marginTop: 8 }}>
-          {outOfRange} contact{outOfRange > 1 ? 's' : ''} situé{outOfRange > 1 ? 's' : ''} au-delà de {place?.radiusKm}{' '}
-          km non affiché{outOfRange > 1 ? 's' : ''}.
+          {translate('recipients.out_of_range', { count: outOfRange, radius: place?.radiusKm })}
         </Text>
       )}
       {!query.isLoading && contacts.length === 0 && (
@@ -151,8 +151,8 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
           showIcon
           message={
             outOfRange > 0
-              ? `Aucun contact dans un rayon de ${place?.radiusKm} km. Élargissez le rayon ou désactivez la géolocalisation de votre petite annonce.`
-              : 'Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des petites annonces.'
+              ? translate('recipients.none_in_range', { radius: place?.radiusKm })
+              : translate('recipients.none')
           }
         />
       )}

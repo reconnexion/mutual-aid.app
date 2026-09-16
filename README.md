@@ -51,8 +51,11 @@ On the other hand, we will use the same Fuseki and Redis server as used for the 
 ```bash
 cd backend
 yarn install
+yarn run link-packages
 yarn run dev
 ```
+
+`yarn run link-packages` (see [below](#linking-to-semappsactivitypods-packages-optional)) is currently required, not optional, when developing against a Pod provider running ActivityPods' `next` branch: `interop:DataGrant`s were removed there, while the published `@activitypods/app@2.2.0` still expects them. Without the link, the app's registration silently fails on the backend side (`One or more required access needs have not been granted` in the Bull queue), no inbox/outbox listener gets created, and the frontend shows "The app is not listening to …". The linked framework is TypeScript, hence `yarn run dev` going through `tsx`.
 
 This will bootstrap the server and, if there are no errors, finish with a message telling you that Moleculer's ServiceBroker has started.
 

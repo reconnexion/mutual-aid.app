@@ -1,5 +1,6 @@
 import { Avatar, Button, Space, Typography } from 'antd';
 import { MessageOutlined, UserOutlined } from '@ant-design/icons';
+import { useTranslate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
 import useActorProfile from '../hooks/useActorProfile';
@@ -24,6 +25,7 @@ type Props = {
 /** Right-hand panel showing who posted the ad being viewed — avatar, name, handle, a short bio,
  *  when they joined, and a way to reach them. Loosely modelled on La Carte des Savoirs' MemberPanel. */
 const PosterPanel = ({ webId, embedded = false }: Props) => {
+  const translate = useTranslate();
   const { data: profile, actorCreated, hasWallet, isLoading } = useActorProfile(webId);
   const profileUrl = useProfileUrl();
   const joinDate = literalValue(actorCreated);
@@ -46,7 +48,7 @@ const PosterPanel = ({ webId, embedded = false }: Props) => {
           style={{ border: '4px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
         />
         <Title level={4} style={{ marginTop: 16, marginBottom: 0 }}>
-          {profile?.['vcard:given-name'] || 'Voisin·e'}
+          {profile?.['vcard:given-name'] || translate('app.neighbour')}
         </Title>
         <Text type="secondary" style={{ fontSize: 12 }}>
           {formatUsername(webId)}
@@ -61,19 +63,19 @@ const PosterPanel = ({ webId, embedded = false }: Props) => {
         {joinDate && (
           <div style={{ marginTop: 8 }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Membre depuis le {dayjs(joinDate).format('D MMMM YYYY')}
+              {translate('poster.member_since', { date: dayjs(joinDate).format(translate('poster.date_format')) })}
             </Text>
           </div>
         )}
         <Space direction="vertical" align="center" style={{ marginTop: 16 }}>
           <a href={profileUrl(webId)} target="_blank" rel="noopener noreferrer">
             <Button type="primary" icon={<MessageOutlined />}>
-              Contacter
+              {translate('poster.contact')}
             </Button>
           </a>
           {payUrl && (
             <Button icon={<G1Icon />} href={payUrl} target="_blank" rel="noopener noreferrer">
-              Envoyer des Ğ1
+              {translate('poster.send_g1')}
             </Button>
           )}
         </Space>
@@ -98,7 +100,7 @@ const PosterPanel = ({ webId, embedded = false }: Props) => {
         }}
       >
         <Title level={5} className="app-brand" style={{ margin: 0, fontSize: 17 }}>
-          À propos de l'annonceur
+          {translate('show.about_poster')}
         </Title>
       </div>
 

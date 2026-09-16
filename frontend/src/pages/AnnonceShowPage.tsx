@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Drawer, Input, Result, Spin, Typography } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, InfoCircleOutlined, SendOutlined, ShareAltOutlined } from '@ant-design/icons';
-import { useGetIdentity, useOne } from '@refinedev/core';
+import { useGetIdentity, useOne, useTranslate } from '@refinedev/core';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import AnnonceCard from '../components/AnnonceCard';
@@ -22,6 +22,7 @@ const { Title } = Typography;
 const AnnonceShowPage = () => {
   const { kind, id } = useParams<{ kind: AnnonceKind; id: string }>();
   const navigate = useNavigate();
+  const translate = useTranslate();
   const [draft, setDraft] = useState('');
   const [showPosterPanel, setShowPosterPanel] = useState(false);
   const { data: identity } = useGetIdentity<Identity>();
@@ -48,7 +49,7 @@ const AnnonceShowPage = () => {
   const canShare = mine || (announcersLoaded && !!identity && announcers.includes(identity.id));
 
   if (query.isLoading) return <Spin style={{ margin: 48 }} />;
-  if (!annonce) return <Result status="404" title="Petite annonce introuvable" extra={<Link to="/annonces">Retour</Link>} />;
+  if (!annonce) return <Result status="404" title={translate('show.not_found')} extra={<Link to="/annonces">{translate('show.back')}</Link>} />;
 
   const submitComment = async () => {
     const content = draft;
@@ -77,7 +78,7 @@ const AnnonceShowPage = () => {
         >
           <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
           <Title level={5} className="app-brand" style={{ margin: 0, flex: 1, minWidth: 0, fontSize: 19 }} ellipsis>
-            {annonce.name || `Petite annonce de ${author?.['vcard:given-name'] || 'Voisin·e'}`}
+            {annonce.name || translate('show.default_title', { name: author?.['vcard:given-name'] || translate('app.neighbour') })}
           </Title>
           {mine && (
             <Button
@@ -86,7 +87,7 @@ const AnnonceShowPage = () => {
               icon={<EditOutlined />}
               onClick={() => openComposer({ mode: 'edit', kind, annonce })}
             >
-              {!isMobile && 'Modifier'}
+              {!isMobile && translate('show.edit')}
             </Button>
           )}
           {canShare && (
@@ -96,7 +97,7 @@ const AnnonceShowPage = () => {
               icon={<ShareAltOutlined />}
               onClick={() => openComposer({ mode: 'share', kind, annonce })}
             >
-              {!isMobile && 'Partager'}
+              {!isMobile && translate('show.share')}
             </Button>
           )}
           {isMobile && !mine && <Button type="text" icon={<InfoCircleOutlined />} onClick={() => setShowPosterPanel(true)} />}
@@ -113,7 +114,7 @@ const AnnonceShowPage = () => {
             value={draft}
             onChange={e => setDraft(e.target.value)}
             onPressEnter={submitComment}
-            placeholder="Écrire un commentaire"
+            placeholder={translate('show.comment_placeholder')}
             style={{ borderRadius: 21, height: 42, fontSize: 14, paddingLeft: 16 }}
           />
           <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={submitComment} loading={sending} style={{ width: 42, height: 42 }} />
@@ -123,7 +124,7 @@ const AnnonceShowPage = () => {
       {!isMobile && <PosterPanel webId={annonce['dc:creator']} />}
 
       {isMobile && (
-        <Drawer title="À propos de l'annonceur" placement="right" width={300} open={showPosterPanel} onClose={() => setShowPosterPanel(false)} styles={{ body: { padding: 0 } }}>
+        <Drawer title={translate('show.about_poster')} placement="right" width={300} open={showPosterPanel} onClose={() => setShowPosterPanel(false)} styles={{ body: { padding: 0 } }}>
           <PosterPanel webId={annonce['dc:creator']} embedded />
         </Drawer>
       )}

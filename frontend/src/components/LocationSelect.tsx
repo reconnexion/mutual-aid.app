@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useList } from '@refinedev/core';
+import { useList, useTranslate } from '@refinedev/core';
 import { Button, Select, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 
@@ -16,6 +16,7 @@ type Props = {
  *  action to create a new one. `Form.Item`-compatible. Stacks vertically on mobile — the "Ajouter
  *  une adresse" button's label doesn't shrink, so side by side it overflows a narrow screen. */
 const LocationSelect = ({ value, onChange }: Props) => {
+  const translate = useTranslate();
   const isMobile = useIsMobile();
   const [modalOpen, setModalOpen] = useState(false);
   const { result, query } = useList<LocationRecord>({ resource: 'location', pagination: { mode: 'off' } });
@@ -25,18 +26,18 @@ const LocationSelect = ({ value, onChange }: Props) => {
       value={value}
       onChange={onChange}
       loading={query.isLoading}
-      placeholder="Choisir une adresse enregistrée"
+      placeholder={translate('location.choose')}
       style={{ flex: 1, width: isMobile ? '100%' : undefined }}
       options={result.data.map(location => ({
         value: location.id,
-        label: location['vcard:given-name'] + (location['vcard:TYPE'] === 'home' ? ' (domicile)' : '')
+        label: location['vcard:given-name'] + (location['vcard:TYPE'] === 'home' ? translate('location.home_suffix') : '')
       }))}
     />
   );
 
   const addButton = (
     <Button icon={<PlusOutlined />} block={isMobile} onClick={() => setModalOpen(true)}>
-      Ajouter une adresse
+      {translate('location.add')}
     </Button>
   );
 

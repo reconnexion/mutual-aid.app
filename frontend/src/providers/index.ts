@@ -3,7 +3,10 @@ import urlJoin from '../utils/urlJoin';
 import { BACKEND_URL, CLIENT_ID, SHAPE_REPOSITORY_URL } from '../config/env';
 
 export const authProvider = apAuthProvider({
-  clientId: CLIENT_ID
+  clientId: CLIENT_ID,
+  // `AntdBackgroundChecks` (see `components/AppShell.tsx`) already polls the app status and
+  // covers the re-consent case, no need for the auth provider's own poll on top of it.
+  appStatusCheckInterval: false
 });
 
 /** Merges in the backend's own JSON-LD context, which types `maid:offerOfResourceType` /

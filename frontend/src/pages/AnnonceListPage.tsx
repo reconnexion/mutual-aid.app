@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Empty, Input, Spin, Typography } from 'antd';
 import { ArrowLeftOutlined, SendOutlined } from '@ant-design/icons';
-import { useGetIdentity } from '@refinedev/core';
+import { useGetIdentity, useTranslate } from '@refinedev/core';
 import { useSearchParams } from 'react-router';
 
 import AnnonceCard from '../components/AnnonceCard';
@@ -9,7 +9,7 @@ import { useComposer } from '../context/ComposerContext';
 import { useMobileNav } from '../context/MobileNavContext';
 import useAnnonces from '../hooks/useAnnonces';
 import useIsMobile from '../hooks/useIsMobile';
-import { FILTER_TITLES, matchesFilter, type FilterId } from '../config/filters';
+import { filterTitleKey, matchesFilter, type FilterId } from '../config/filters';
 import { HEADER_HEIGHT } from '../config/layout';
 import type { Identity } from '../types';
 
@@ -18,6 +18,7 @@ const { Title, Text } = Typography;
 /** WhatsApp-style layout: fixed title header, a scrollable feed in the middle, and a fixed
  *  bottom bar that opens the ad composer — mirrors the mockup's MainPanel exactly. */
 const AnnonceListPage = () => {
+  const translate = useTranslate();
   const { data: identity } = useGetIdentity<Identity>();
   const { openComposer } = useComposer();
   const { showContent, showSidebar } = useMobileNav();
@@ -60,11 +61,10 @@ const AnnonceListPage = () => {
         {isMobile && <Button icon={<ArrowLeftOutlined />} type="text" onClick={showSidebar} style={{ marginLeft: -8 }} />}
         <div style={{ flex: 1, minWidth: 0 }}>
           <Title level={4} className="app-brand" style={{ margin: 0, lineHeight: '26px', fontSize: 20 }} ellipsis>
-            {FILTER_TITLES[filter]}
+            {translate(filterTitleKey(filter))}
           </Title>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {filtered.length} petite{filtered.length !== 1 ? 's' : ''} annonce{filtered.length !== 1 ? 's' : ''}
-            {filter === 'mine' ? ' créée par vous' : ' partagée avec vous'}
+            {translate(filter === 'mine' ? 'list.count_mine' : 'list.count_shared', { count: filtered.length })}
           </Text>
         </div>
       </div>
@@ -73,7 +73,7 @@ const AnnonceListPage = () => {
         {isLoading ? (
           <Spin />
         ) : filtered.length === 0 ? (
-          <Empty description="Aucune petite annonce ici pour le moment" style={{ marginTop: 48 }} />
+          <Empty description={translate('list.empty')} style={{ marginTop: 48 }} />
         ) : (
           filtered.map(annonce => <AnnonceCard key={annonce.id} annonce={annonce} kind={annonce.kind} />)
         )}
@@ -85,7 +85,7 @@ const AnnonceListPage = () => {
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onPressEnter={startAnnonce}
-          placeholder="Poster une petite annonce"
+          placeholder={translate('app.post_ad')}
           style={{ borderRadius: 21, height: 42, fontSize: 14, paddingLeft: 16 }}
         />
         <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={startAnnonce} style={{ width: 42, height: 42 }} />

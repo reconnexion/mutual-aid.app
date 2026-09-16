@@ -15,7 +15,7 @@ import {
   SwapOutlined,
   ToolOutlined
 } from '@ant-design/icons';
-import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useUpdate } from '@refinedev/core';
+import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useTranslate, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
 import ChoiceCards, { type ChoiceOption } from './ChoiceCards';
@@ -51,18 +51,20 @@ const RESOURCE_TYPE_PREDICATE: Record<AnnonceKind, string> = {
   request: 'maid:requestOfResourceType'
 };
 
+type Translate = (key: string, options?: any) => string;
+
 // Neither choice has a default: preselecting "Offre" + "Matériel" made the two rows look like
 // tabs rather than a decision, and ads ended up in the wrong category. The descriptions are what
 // actually explain the taxonomy (offer/request × pair:AtomBasedResource/HumanBasedResource/Resource).
-const KIND_OPTIONS: ChoiceOption<AnnonceKind>[] = [
-  { value: 'offer', title: 'Proposer', description: "J'offre quelque chose à mon réseau", icon: <SendOutlined /> },
-  { value: 'request', title: 'Demander', description: 'Je cherche quelque chose', icon: <SearchOutlined /> }
+const kindOptions = (t: Translate): ChoiceOption<AnnonceKind>[] => [
+  { value: 'offer', title: t('composer.kind.offer'), description: t('composer.kind.offer_description'), icon: <SendOutlined /> },
+  { value: 'request', title: t('composer.kind.request'), description: t('composer.kind.request_description'), icon: <SearchOutlined /> }
 ];
 
-const RESOURCE_TYPE_OPTIONS: ChoiceOption<ResourceType>[] = [
-  { value: 'pair:AtomBasedResource', title: 'Matériel', description: 'Objet, outil, véhicule…', icon: <ToolOutlined /> },
-  { value: 'pair:HumanBasedResource', title: 'Compétence', description: 'Coup de main, savoir-faire…', icon: <BulbOutlined /> },
-  { value: 'pair:Resource', title: 'Autre', description: 'Hébergement, covoiturage…', icon: <AppstoreOutlined /> }
+const resourceTypeOptions = (t: Translate): ChoiceOption<ResourceType>[] => [
+  { value: 'pair:AtomBasedResource', title: t('resource_types.atom'), description: t('composer.resource_type.atom_description'), icon: <ToolOutlined /> },
+  { value: 'pair:HumanBasedResource', title: t('resource_types.human'), description: t('composer.resource_type.human_description'), icon: <BulbOutlined /> },
+  { value: 'pair:Resource', title: t('resource_types.other'), description: t('composer.resource_type.other_description'), icon: <AppstoreOutlined /> }
 ];
 
 const EXCHANGE_ICON: Record<ExchangeType, ReactNode> = {
@@ -78,9 +80,9 @@ const EXCHANGE_ICON: Record<ExchangeType, ReactNode> = {
 
 // The "Titre" placeholder comes from the chosen exchange type (see `exchangeTypes.ts`); the body's
 // only depends on offer vs request.
-const CONTENT_PLACEHOLDER: Record<AnnonceKind, string> = {
-  offer: 'Bonjour, je propose…',
-  request: 'Bonjour, je cherche…'
+const CONTENT_PLACEHOLDER_KEY: Record<AnnonceKind, string> = {
+  offer: 'composer.content.placeholder_offer',
+  request: 'composer.content.placeholder_request'
 };
 
 /** Pages of the dialog. `create` walks through all four; `edit` folds "Diffusion" (geolocation
@@ -137,6 +139,7 @@ const LabelWithHelp = ({ label, help }: { label: string; help: string }) => (
 
 const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle, onClose, onSaved }: Props) => {
   const { message } = App.useApp();
+  const translate = useTranslate();
   const isMobile = useIsMobile();
   const [form] = Form.useForm<FormValues>();
   // Undefined in `create` mode until the user picks a card; `edit`/`share` are prefilled from the
@@ -245,7 +248,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     return point && { ...point, radiusKm: radius };
   }, [mode, annonce, geolocated, locationId, radius, locations.data]);
 
-  const heading = mode === 'edit' ? 'Modifier la petite annonce' : mode === 'share' ? 'Partager la petite annonce' : 'Poster une petite annonce';
+  const heading = translate(`composer.heading_${mode}`);
   const stepCounter = steps.length > 1 ? ` (${stepIndex + 1}/${steps.length})` : '';
 
   // Only read after the form has been validated (submit/delete), by which point `kind` is set.
@@ -347,7 +350,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
       }
 
       invalidate({ resource: resourceUri, invalidates: ['list', 'detail'] });
-      message.success(mode === 'create' ? 'Petite annonce publiée' : mode === 'edit' ? 'Petite annonce mise à jour' : 'Petite annonce partagée');
+      message.success(translate(mode === 'create' ? 'composer.published' : mode === 'edit' ? 'composer.updated' : 'composer.shared'));
       onSaved?.();
       onClose();
     } catch (e: any) {
@@ -362,7 +365,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     try {
       await deleteAnnonce({ resource: resourceUri, id: annonce.id });
       invalidate({ resource: resourceUri, invalidates: ['list'] });
-      message.success('Petite annonce supprimée');
+      message.success(translate('composer.deleted'));
       onSaved?.();
       onClose();
     } catch (e: any) {
@@ -371,10 +374,12 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     setDeleting(false);
   };
 
-  const primaryLabel = !isLastStep ? (steps[stepIndex + 1] === 'recipients' ? 'Suivant : destinataires' : 'Suivant') : mode === 'create' ? 'Envoyer' : 'Enregistrer';
+  const primaryLabel = translate(
+    !isLastStep ? (steps[stepIndex + 1] === 'recipients' ? 'composer.next_recipients' : 'composer.next') : mode === 'create' ? 'composer.send' : 'composer.save'
+  );
   const onPrimary = !isLastStep ? goNext : submit;
 
-  const secondaryLabel = stepIndex > 0 ? 'Retour' : 'Annuler';
+  const secondaryLabel = translate(stepIndex > 0 ? 'composer.back' : 'composer.cancel');
   const onSecondary = () => {
     if (stepIndex > 0) setStepIndex(stepIndex - 1);
     else onClose();
@@ -389,19 +394,19 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         valuePropName="checked"
         label={
           <LabelWithHelp
-            label="Annonce géolocalisée"
-            help="Une petite annonce géolocalisée est rattachée à une adresse et à un rayon de diffusion : elle n'est visible que par les personnes situées dans ce périmètre. Idéal pour du matériel à venir chercher ou un coup de main sur place. Désactivez-la si votre annonce s'adresse à tout votre réseau, où qu'il se trouve."
+            label={translate('composer.geolocated.label')}
+            help={translate('composer.geolocated.help')}
           />
         }
       >
-        <Switch checkedChildren="Oui" unCheckedChildren="Non" />
+        <Switch checkedChildren={translate('composer.geolocated.yes')} unCheckedChildren={translate('composer.geolocated.no')} />
       </Form.Item>
       {geolocated && (
         <>
-          <Form.Item name="locationId" label="Localité" rules={[{ required: !annonce?.location, message: 'Indiquez une localité' }]}>
+          <Form.Item name="locationId" label={translate('composer.locality.label')} rules={[{ required: !annonce?.location, message: translate('composer.locality.required') }]}>
             <LocationSelect />
           </Form.Item>
-          <Form.Item name="radius" label={<LabelWithHelp label="Rayon de diffusion" help="Les personnes situées au-delà de ce rayon ne verront pas votre petite annonce." />}>
+          <Form.Item name="radius" label={<LabelWithHelp label={translate('composer.radius.label')} help={translate('composer.radius.help')} />}>
             <Slider min={5} max={50} step={5} marks={{ 5: '5 km', 50: '50 km' }} />
           </Form.Item>
         </>
@@ -410,11 +415,11 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         name="expiryDays"
         label={
           <LabelWithHelp
-            label="Expire dans (jours)"
-            help="Passé ce délai, votre petite annonce disparaît du fil de vos contacts. Elle reste dans « Mes petites annonces », d'où vous pouvez la prolonger."
+            label={translate('composer.expiry.label')}
+            help={translate('composer.expiry.help')}
           />
         }
-        rules={[{ required: true, message: 'Indiquez une durée' }]}
+        rules={[{ required: true, message: translate('composer.expiry.required') }]}
       >
         <InputNumber min={1} max={365} />
       </Form.Item>
@@ -451,9 +456,9 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div>
             {mode === 'edit' && (
-              <Popconfirm title="Supprimer cette petite annonce ?" okText="Supprimer" cancelText="Annuler" okButtonProps={{ danger: true }} onConfirm={deleteAd}>
+              <Popconfirm title={translate('composer.delete_confirm')} okText={translate('composer.delete')} cancelText={translate('composer.cancel')} okButtonProps={{ danger: true }} onConfirm={deleteAd}>
                 <Button danger icon={<DeleteOutlined />} loading={deleting}>
-                  {!isMobile && 'Supprimer'}
+                  {!isMobile && translate('composer.delete')}
                 </Button>
               </Popconfirm>
             )}
@@ -475,30 +480,37 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         <div style={{ display: step === 'type' ? 'block' : 'none' }}>
           <Form.Item
             name="kind"
-            label="Je souhaite…"
-            rules={[{ required: true, message: 'Indiquez si vous proposez ou demandez quelque chose' }]}
-            extra={mode === 'edit' ? 'Ne peut plus être modifié une fois la petite annonce publiée.' : undefined}
+            label={translate('composer.kind.label')}
+            rules={[{ required: true, message: translate('composer.kind.required') }]}
+            extra={mode === 'edit' ? translate('composer.kind.locked') : undefined}
           >
-            <ChoiceCards options={KIND_OPTIONS} disabled={mode === 'edit'} />
+            <ChoiceCards options={kindOptions(translate)} disabled={mode === 'edit'} />
           </Form.Item>
-          <Form.Item name="resourceType" label="Il s'agit de…" rules={[{ required: true, message: "Précisez de quoi il s'agit" }]}>
-            <ChoiceCards options={RESOURCE_TYPE_OPTIONS} />
+          <Form.Item name="resourceType" label={translate('composer.resource_type.label')} rules={[{ required: true, message: translate('composer.resource_type.required') }]}>
+            <ChoiceCards options={resourceTypeOptions(translate)} />
           </Form.Item>
           {/* Offers and requests don't share exchange classes, so wait for "Je souhaite…". */}
           {kind && (
-            <Form.Item name="exchangeType" label="Type d'échange" rules={[{ required: true, message: "Choisissez un type d'échange" }]}>
-              <ChoiceCards options={exchangeTypesFor(kind, resourceType).map(t => ({ value: t.value, title: t.label, description: t.description, icon: EXCHANGE_ICON[t.value] }))} />
+            <Form.Item name="exchangeType" label={translate('composer.exchange_type.label')} rules={[{ required: true, message: translate('composer.exchange_type.required') }]}>
+              <ChoiceCards
+                options={exchangeTypesFor(kind, resourceType).map(t => ({
+                  value: t.value,
+                  title: translate(`exchange_types.${t.key}.label`),
+                  description: translate(`exchange_types.${t.key}.description`),
+                  icon: EXCHANGE_ICON[t.value]
+                }))}
+              />
             </Form.Item>
           )}
         </div>
         <div style={{ display: step === 'details' ? 'block' : 'none' }}>
-          <Form.Item name="title" label="Titre" rules={[{ required: true, message: 'Donnez un titre à votre petite annonce' }]}>
-            <Input placeholder={exchangeTypeDef(exchangeType)?.titleExample ?? 'Ex. Outils de jardinage, cours de guitare, covoiturage…'} />
+          <Form.Item name="title" label={translate('composer.title.label')} rules={[{ required: true, message: translate('composer.title.required') }]}>
+            <Input placeholder={translate(exchangeTypeDef(exchangeType) ? `exchange_types.${exchangeTypeDef(exchangeType)!.key}.example` : 'composer.title.placeholder')} />
           </Form.Item>
-          <Form.Item name="content" label="Votre petite annonce" rules={[{ required: true, message: 'Décrivez votre petite annonce' }]} style={{ marginBottom: 16 }}>
-            <Input.TextArea rows={5} placeholder={CONTENT_PLACEHOLDER[kind ?? 'offer']} />
+          <Form.Item name="content" label={translate('composer.content.label')} rules={[{ required: true, message: translate('composer.content.required') }]} style={{ marginBottom: 16 }}>
+            <Input.TextArea rows={5} placeholder={translate(CONTENT_PLACEHOLDER_KEY[kind ?? 'offer'])} />
           </Form.Item>
-          <Form.Item name="images" label="Photos (max 10)">
+          <Form.Item name="images" label={translate('composer.images')}>
             <ImageUpload />
           </Form.Item>
           {mode === 'edit' && distribution}

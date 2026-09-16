@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Button, Space, Typography } from 'antd';
-import { useGetIdentity } from '@refinedev/core';
+import { useGetIdentity, useTranslate } from '@refinedev/core';
 import { useNavigate } from 'react-router';
 
 import { APP_DESCRIPTION, APP_NAME } from '../config/env';
@@ -10,6 +10,7 @@ const { Title, Paragraph } = Typography;
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const translate = useTranslate();
   const { data: identity, isLoading } = useGetIdentity<Identity>();
 
   useEffect(() => {
@@ -37,7 +38,7 @@ const HomePage = () => {
       <Paragraph style={{ color: 'rgba(255,255,255,0.85)', maxWidth: 320, fontStyle: 'italic' }}>{APP_DESCRIPTION}</Paragraph>
       <Space style={{ marginTop: 16 }}>
         <Button size="large" type="primary" ghost onClick={() => navigate('/login')} style={{ borderColor: '#fff', color: '#fff' }}>
-          Se connecter
+          {translate('app.login')}
         </Button>
       </Space>
     </div>

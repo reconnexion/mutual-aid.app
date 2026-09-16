@@ -1,6 +1,7 @@
 import { Avatar, Button, Space, Tag, Typography } from 'antd';
 import { CommentOutlined, UserOutlined } from '@ant-design/icons';
 import { Link } from 'react-router';
+import { useTranslate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
 import ImageGallery from './ImageGallery';
@@ -11,31 +12,32 @@ import useProfileUrl from '../hooks/useProfileUrl';
 import { formatUsername } from '../utils/formatUsername';
 import { AVATAR_SIZE } from '../config/layout';
 import { exchangeTypeCurie, imagesOf, isExpired, literalValue, resourceTypeCurie } from '../utils/ontology';
-import { exchangeTypeLabel } from '../config/exchangeTypes';
+import { exchangeTypeLabelKey } from '../config/exchangeTypes';
 import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Paragraph, Text } = Typography;
 
-export const CAT_LABEL: Record<AnnonceKind, string> = { offer: 'Offre', request: 'Demande' };
 export const CAT_COLOR: Record<AnnonceKind, string> = { offer: 'green', request: 'blue' };
 
 export const resourceTypeOf = (annonce: AnnonceRecord, kind: AnnonceKind) =>
   resourceTypeCurie(kind === 'offer' ? annonce['maid:offerOfResourceType'] : annonce['maid:requestOfResourceType']);
 
-export const SUB_LABEL: Record<string, string> = {
-  'pair:AtomBasedResource': 'Matériel',
-  'pair:HumanBasedResource': 'Compétence',
-  'pair:Resource': 'Autre'
+export const SUB_LABEL_KEY: Record<string, string> = {
+  'pair:AtomBasedResource': 'resource_types.atom',
+  'pair:HumanBasedResource': 'resource_types.human',
+  'pair:Resource': 'resource_types.other'
 };
 
-export const expiryLabel = (annonce: AnnonceRecord) => {
+type Translate = (key: string, options?: any) => string;
+
+export const expiryLabel = (annonce: AnnonceRecord, translate: Translate) => {
   const expirationDate = literalValue(annonce['maid:expirationDate']);
-  if (!expirationDate) return 'Sans expiration';
+  if (!expirationDate) return translate('card.no_expiry');
   // Same test as the feed's masking, so an ad is never both listed and labelled "Expirée".
-  if (isExpired(annonce)) return 'Expirée';
+  if (isExpired(annonce)) return translate('card.expired');
   const days = dayjs(expirationDate).diff(dayjs(), 'day');
-  if (days === 0) return "Expire aujourd'hui";
-  return `Expire dans ${days} j`;
+  if (days === 0) return translate('card.expires_today');
+  return translate('card.expires_in', { count: days });
 };
 
 type Props = {
@@ -48,13 +50,14 @@ type Props = {
  *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message.
  *  "Modifier"/"Partager" live only in the detail page's header — not worth repeating here. */
 const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
+  const translate = useTranslate();
   const { data: author } = useActorProfile(annonce['dc:creator']);
   const { items: replies } = useActivityCollection(annonce.replies);
   const profileUrl = useProfileUrl();
   const place = annonce.location;
   const images = imagesOf(annonce['pair:depictedBy']);
   const resourceType = resourceTypeOf(annonce, kind);
-  const exchangeLabel = exchangeTypeLabel(exchangeTypeCurie(annonce['pair:hasType']));
+  const exchangeLabelKey = exchangeTypeLabelKey(exchangeTypeCurie(annonce['pair:hasType']));
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
 
   return (
@@ -74,7 +77,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
         <div style={{ padding: '10px 14px 8px' }}>
           <div style={{ marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
             <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
-              <Text strong>{author?.['vcard:given-name'] || 'Voisin·e'}</Text>
+              <Text strong>{author?.['vcard:given-name'] || translate('app.neighbour')}</Text>
             </a>
             <Text type="secondary" style={{ fontSize: 11 }}>
               {formatUsername(annonce['dc:creator'])}
@@ -86,9 +89,9 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
                 {annonce.name}
               </Text>
             )}
-            <Tag color={CAT_COLOR[kind]}>{CAT_LABEL[kind]}</Tag>
-            {resourceType && <Tag color="geekblue">{SUB_LABEL[resourceType] || resourceType}</Tag>}
-            {exchangeLabel && <Tag color="gold">{exchangeLabel}</Tag>}
+            <Tag color={CAT_COLOR[kind]}>{translate(`kinds.${kind}`)}</Tag>
+            {resourceType && <Tag color="geekblue">{SUB_LABEL_KEY[resourceType] ? translate(SUB_LABEL_KEY[resourceType]) : resourceType}</Tag>}
+            {exchangeLabelKey && <Tag color="gold">{translate(exchangeLabelKey)}</Tag>}
           </Space>
           <Link to={detailUrl} style={{ color: 'inherit' }}>
             <Paragraph ellipsis={showFooter ? { rows: 3 } : false} style={{ whiteSpace: 'pre-wrap', marginBottom: images.length ? 12 : 8 }}>
@@ -102,13 +105,13 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
           )}
           <Space size={6} wrap style={{ fontSize: 11, display: 'flex' }}>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              Posté le {annonce['dc:created'] ? dayjs(annonce['dc:created']).format('D MMM') : ''}
+              {translate('card.posted_on', { date: annonce['dc:created'] ? dayjs(annonce['dc:created']).format(translate('card.date_format')) : '' })}
             </Text>
             <Text type="secondary" style={{ fontSize: 11 }}>
               ·
             </Text>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              {expiryLabel(annonce)}
+              {expiryLabel(annonce, translate)}
             </Text>
             {place?.name && (
               <>
@@ -128,7 +131,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', borderTop: '1px solid #f0f0f0' }}>
             <Link to={detailUrl}>
               <Button type="text" size="small" icon={<CommentOutlined />}>
-                {replies.length > 0 ? `${replies.length} commentaire${replies.length > 1 ? 's' : ''}` : 'Commenter'}
+                {replies.length > 0 ? translate('card.comments', { count: replies.length }) : translate('card.comment')}
               </Button>
             </Link>
             <LikeButton annonce={annonce} kind={kind} />

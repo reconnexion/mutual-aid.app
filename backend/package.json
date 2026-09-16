@@ -2,8 +2,8 @@
   "name": "entraide-backend",
   "private": true,
   "scripts": {
-    "dev": "moleculer-runner --hot --repl services/*.service.js services/**/*.service.js",
-    "start": "moleculer-runner services/*.service.js services/**/*.service.js",
+    "dev": "tsx node_modules/moleculer/bin/moleculer-runner.js --hot --repl services/*.service.js services/**/*.service.js",
+    "start": "tsx node_modules/moleculer/bin/moleculer-runner.js services/*.service.js services/**/*.service.js",
     "link-packages": "yarn link @activitypods/app @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/solid @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid",
     "unlink-packages": "yarn unlink @activitypods/app @semapps/activitypub @semapps/auth @semapps/backup @semapps/core @semapps/crypto @semapps/importer @semapps/inference @semapps/jsonld @semapps/ldp @semapps/middlewares @semapps/migration @semapps/mime-types @semapps/ontologies @semapps/solid @semapps/sync @semapps/nodeinfo @semapps/notifications @semapps/sparql-endpoint @semapps/triplestore @semapps/void @semapps/webacl @semapps/webfinger @semapps/webhooks @semapps/webid"
   },
@@ -29,5 +29,8 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "devDependencies": {
+    "tsx": "^4.20.3"
+  }
 }

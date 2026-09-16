@@ -13,32 +13,23 @@ export type FilterId =
   | 'request-human'
   | 'request-other';
 
-export const FILTER_TITLES: Record<FilterId, string> = {
-  all: 'Toutes les petites annonces',
-  mine: 'Mes petites annonces',
-  offer: 'Offres',
-  'offer-atom': 'Offres · Matériel',
-  'offer-human': 'Offres · Compétence',
-  'offer-other': 'Offres · Autre',
-  request: 'Demandes',
-  'request-atom': 'Demandes · Matériel',
-  'request-human': 'Demandes · Compétence',
-  'request-other': 'Demandes · Autre'
-};
+/** Translation key of a filter's page title ("Toutes les petites annonces", "Offres · Matériel"…). */
+export const filterTitleKey = (id: FilterId) => `filters.${id}`;
 
 /** Flat sidebar row list — every row (including group headers) is directly clickable, matching
- *  the mockup: no expand/collapse interaction, hierarchy is shown via weight/indent only. */
-export const FILTER_ROWS: { id: FilterId; label: string; bold?: boolean; indent?: boolean }[] = [
-  { id: 'all', label: FILTER_TITLES.all },
-  { id: 'mine', label: FILTER_TITLES.mine },
-  { id: 'offer', label: FILTER_TITLES.offer, bold: true },
-  { id: 'offer-atom', label: 'Matériel', indent: true },
-  { id: 'offer-human', label: 'Compétence', indent: true },
-  { id: 'offer-other', label: 'Autre', indent: true },
-  { id: 'request', label: FILTER_TITLES.request, bold: true },
-  { id: 'request-atom', label: 'Matériel', indent: true },
-  { id: 'request-human', label: 'Compétence', indent: true },
-  { id: 'request-other', label: 'Autre', indent: true }
+ *  the mockup: no expand/collapse interaction, hierarchy is shown via weight/indent only. Sub-rows
+ *  reuse the bare resource type labels ("Matériel"…), the header row above them giving the context. */
+export const FILTER_ROWS: { id: FilterId; labelKey: string; bold?: boolean; indent?: boolean }[] = [
+  { id: 'all', labelKey: filterTitleKey('all') },
+  { id: 'mine', labelKey: filterTitleKey('mine') },
+  { id: 'offer', labelKey: filterTitleKey('offer'), bold: true },
+  { id: 'offer-atom', labelKey: 'resource_types.atom', indent: true },
+  { id: 'offer-human', labelKey: 'resource_types.human', indent: true },
+  { id: 'offer-other', labelKey: 'resource_types.other', indent: true },
+  { id: 'request', labelKey: filterTitleKey('request'), bold: true },
+  { id: 'request-atom', labelKey: 'resource_types.atom', indent: true },
+  { id: 'request-human', labelKey: 'resource_types.human', indent: true },
+  { id: 'request-other', labelKey: 'resource_types.other', indent: true }
 ];
 
 const resourceTypeOf = (annonce: Annonce) =>

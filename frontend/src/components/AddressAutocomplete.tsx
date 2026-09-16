@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AutoComplete, Input } from 'antd';
 import { EnvironmentOutlined } from '@ant-design/icons';
+import { useTranslate } from '@refinedev/core';
 
 import { IS_MAPBOX_CONFIGURED, parseAddressFeature, searchAddress, type MapboxFeature } from '../config/mapbox';
 import { APP_LANG } from '../config/env';
@@ -14,6 +15,7 @@ type Props = {
 /** Mapbox-backed address search, resolving a locality to its `as:Place` (name/latitude/longitude).
  *  `Form.Item`-compatible. */
 const AddressAutocomplete = ({ value, onChange }: Props) => {
+  const translate = useTranslate();
   const [keyword, setKeyword] = useState(value?.name ?? '');
   const [features, setFeatures] = useState<MapboxFeature[]>([]);
   const [failed, setFailed] = useState(false);
@@ -46,8 +48,8 @@ const AddressAutocomplete = ({ value, onChange }: Props) => {
       <Alert
         type="error"
         showIcon
-        message="Recherche d'adresse indisponible"
-        description="Aucune clé d'accès Mapbox n'a été configurée pour ce site (VITE_MAPBOX_ACCESS_TOKEN). Contactez l'administrateur."
+        message={translate('location.unavailable')}
+        description={translate('location.unavailable_description')}
       />
     );
   }
@@ -66,13 +68,13 @@ const AddressAutocomplete = ({ value, onChange }: Props) => {
         status={failed ? 'error' : undefined}
         style={{ width: '100%' }}
       >
-        <Input prefix={<EnvironmentOutlined />} placeholder="Rechercher une localité" />
+        <Input prefix={<EnvironmentOutlined />} placeholder={translate('location.search')} />
       </AutoComplete>
       {failed && (
         <Alert
           type="error"
           showIcon
-          message="La recherche d'adresse a échoué. Vérifiez votre connexion et réessayez."
+          message={translate('location.failed')}
           style={{ marginTop: 8 }}
         />
       )}
