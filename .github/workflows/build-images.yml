@@ -36,12 +36,17 @@ jobs:
       - name: Select the target environment
         id: env
         run: |
+          # Set the DEV_/PROD_POD_PROVIDER_BASE_URL repository variable to restrict an
+          # environment to a single Pod provider. Unset, the login page lists the public
+          # providers and lets the user pick one.
           if [ "${{ github.ref_type }}" = "tag" ]; then
             echo "domain=${{ vars.PROD_DOMAIN_NAME || 'lentraide.app' }}" >> "$GITHUB_OUTPUT"
             echo "app_name=L'Entraide" >> "$GITHUB_OUTPUT"
+            echo "pod_provider=${{ vars.PROD_POD_PROVIDER_BASE_URL }}" >> "$GITHUB_OUTPUT"
           else
             echo "domain=${{ vars.DEV_DOMAIN_NAME || 'dev.lentraide.app' }}" >> "$GITHUB_OUTPUT"
             echo "app_name=L'Entraide (dev)" >> "$GITHUB_OUTPUT"
+            echo "pod_provider=${{ vars.DEV_POD_PROVIDER_BASE_URL }}" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: docker/metadata-action@v5
@@ -81,7 +86,7 @@ jobs:
             VITE_SHAPE_REPOSITORY_URL=${{ vars.SHAPE_REPOSITORY_URL || 'https://shapes.activitypods.org/' }}
             VITE_ORGANIZATION_NAME=${{ vars.ORGANIZATION_NAME }}
             VITE_ORGANIZATION_URL=${{ vars.ORGANIZATION_URL }}
-            VITE_POD_PROVIDER_BASE_URL=${{ vars.POD_PROVIDER_BASE_URL }}
+            VITE_POD_PROVIDER_BASE_URL=${{ steps.env.outputs.pod_provider }}
             VITE_MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}
             VITE_PORTEJUNES_URL=${{ vars.PORTEJUNES_URL }}
             VITE_DONATION_URL=${{ vars.DONATION_URL }}
