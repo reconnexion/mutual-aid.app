@@ -1,0 +1,241 @@
+{
+  "notifications": {
+    "success": "Success",
+    "error": "Error",
+    "createSuccess": "Successfully created {{resource}}",
+    "createError": "Error creating: {{statusCode}}",
+    "editSuccess": "Successfully updated {{resource}}",
+    "editError": "Error updating: {{statusCode}}",
+    "deleteSuccess": "Successfully deleted {{resource}}",
+    "deleteError": "Error deleting: {{statusCode}}"
+  },
+  "buttons": {
+    "logout": "Log out",
+    "refresh": "Refresh"
+  },
+  "pages": {
+    "login": {
+      "choosePodProvider": "Choose the Pod provider that hosts your ActivityPods account",
+      "podProvidersNotLoaded": "Unable to load the list of Pod providers",
+      "backToLogin": "Back to login"
+    }
+  },
+  "apods": {
+    "error": {
+      "app_not_listening": "The app is not listening to {{uri}}",
+      "app_offline": "The app backend is offline",
+      "app_status_unavailable": "Unable to check app status"
+    }
+  },
+  "app": {
+    "login": "Log in",
+    "post_ad": "Post an ad",
+    "support": "Support this app",
+    "neighbour": "Neighbour"
+  },
+  "menu": {
+    "network": "Network",
+    "apps": "Applications",
+    "data": "My data",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "kinds": {
+    "offer": "Offer",
+    "request": "Request"
+  },
+  "resource_types": {
+    "atom": "Material",
+    "human": "Skill",
+    "other": "Other"
+  },
+  "filters": {
+    "all": "All ads",
+    "mine": "My ads",
+    "offer": "Offers",
+    "offer-atom": "Offers · Material",
+    "offer-human": "Offers · Skill",
+    "offer-other": "Offers · Other",
+    "request": "Requests",
+    "request-atom": "Requests · Material",
+    "request-human": "Requests · Skill",
+    "request-other": "Requests · Other"
+  },
+  "list": {
+    "count_shared_one": "{{count}} ad shared with you",
+    "count_shared_other": "{{count}} ads shared with you",
+    "count_mine_one": "{{count}} ad posted by you",
+    "count_mine_other": "{{count}} ads posted by you",
+    "empty": "No ads here yet"
+  },
+  "show": {
+    "not_found": "Ad not found",
+    "back": "Back",
+    "default_title": "Ad from {{name}}",
+    "edit": "Edit",
+    "share": "Share",
+    "comment_placeholder": "Write a comment",
+    "about_poster": "About the poster"
+  },
+  "card": {
+    "no_expiry": "No expiry",
+    "expired": "Expired",
+    "expires_today": "Expires today",
+    "expires_in": "Expires in {{count}} d",
+    "posted_on": "Posted on {{date}}",
+    "date_format": "MMM D",
+    "comment": "Comment",
+    "comments_one": "{{count}} comment",
+    "comments_other": "{{count}} comments"
+  },
+  "gallery": {
+    "more_one": "+{{count}} photo",
+    "more_other": "+{{count}} photos"
+  },
+  "comments": {
+    "empty": "No comments yet"
+  },
+  "poster": {
+    "member_since": "Member since {{date}}",
+    "date_format": "MMMM D, YYYY",
+    "contact": "Contact",
+    "send_g1": "Send Ğ1"
+  },
+  "recipients": {
+    "search": "Search",
+    "view": "View",
+    "share": "Share",
+    "out_of_range_one": "{{count}} contact located more than {{radius}} km away is not shown.",
+    "out_of_range_other": "{{count}} contacts located more than {{radius}} km away are not shown.",
+    "none_in_range": "No contact within {{radius}} km. Widen the radius or turn off your ad's geolocation.",
+    "none": "No contacts yet. Add neighbours to your network from your Pod to be able to share ads with them."
+  },
+  "location": {
+    "choose": "Pick a saved address",
+    "home_suffix": " (home)",
+    "add": "Add an address",
+    "name": "Address name",
+    "name_placeholder": "E.g. Home, Workshop…",
+    "default_name": "{{name}}'s home",
+    "locality": "Locality",
+    "locality_required": "Enter a locality",
+    "home": "Home address (used by default)",
+    "search": "Search for a locality",
+    "unavailable": "Address search unavailable",
+    "unavailable_description": "No Mapbox access token has been configured for this site (VITE_MAPBOX_ACCESS_TOKEN). Contact the administrator.",
+    "failed": "Address search failed. Check your connection and try again."
+  },
+  "upload": {
+    "add": "Add"
+  },
+  "composer": {
+    "heading_create": "Post an ad",
+    "heading_edit": "Edit the ad",
+    "heading_share": "Share the ad",
+    "next": "Next",
+    "next_recipients": "Next: recipients",
+    "send": "Send",
+    "save": "Save",
+    "back": "Back",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "delete_confirm": "Delete this ad?",
+    "published": "Ad published",
+    "updated": "Ad updated",
+    "shared": "Ad shared",
+    "deleted": "Ad deleted",
+    "kind": {
+      "label": "I want to…",
+      "required": "Say whether you are offering or requesting something",
+      "locked": "Cannot be changed once the ad is published.",
+      "offer": "Offer",
+      "offer_description": "I'm offering something to my network",
+      "request": "Request",
+      "request_description": "I'm looking for something"
+    },
+    "resource_type": {
+      "label": "It is…",
+      "required": "Say what it is about",
+      "atom_description": "Object, tool, vehicle…",
+      "human_description": "A hand, know-how…",
+      "other_description": "Accommodation, carpooling…"
+    },
+    "exchange_type": {
+      "label": "Exchange type",
+      "required": "Choose an exchange type"
+    },
+    "title": {
+      "label": "Title",
+      "required": "Give your ad a title",
+      "placeholder": "E.g. Gardening tools, guitar lessons, carpooling…"
+    },
+    "content": {
+      "label": "Your ad",
+      "required": "Describe your ad",
+      "placeholder_offer": "Hi, I'm offering…",
+      "placeholder_request": "Hi, I'm looking for…"
+    },
+    "images": "Photos (max 10)",
+    "geolocated": {
+      "label": "Geolocated ad",
+      "help": "A geolocated ad is tied to an address and a sharing radius: only people located within that area can see it. Ideal for items to pick up or a hand on site. Turn it off if your ad is for your whole network, wherever they are.",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "locality": {
+      "label": "Locality",
+      "required": "Enter a locality"
+    },
+    "radius": {
+      "label": "Sharing radius",
+      "help": "People located beyond this radius will not see your ad."
+    },
+    "expiry": {
+      "label": "Expires in (days)",
+      "help": "After this delay, your ad disappears from your contacts' feed. It stays in \"My ads\", where you can extend it.",
+      "required": "Enter a duration"
+    }
+  },
+  "exchange_types": {
+    "gift_offer": {
+      "label": "Gift",
+      "description": "For free, nothing in return",
+      "example": "E.g. I'm giving away gardening tools"
+    },
+    "barter_offer": {
+      "label": "Barter",
+      "description": "In exchange for another good or service",
+      "example": "E.g. I'm swapping vegetables for eggs"
+    },
+    "sale_offer": {
+      "label": "Sale",
+      "description": "For money (euros or Ğ1)",
+      "example": "E.g. I'm selling a child's bike"
+    },
+    "loan_offer": {
+      "label": "Loan",
+      "description": "For a limited time",
+      "example": "E.g. I'm lending my trailer"
+    },
+    "gift_request": {
+      "label": "Gift",
+      "description": "I'm looking to get it for free",
+      "example": "E.g. I'm looking for a sofa to take away"
+    },
+    "barter_request": {
+      "label": "Barter",
+      "description": "I'm offering another good or service in exchange",
+      "example": "E.g. I'm looking for English lessons in exchange for guitar lessons"
+    },
+    "purchase_request": {
+      "label": "Purchase",
+      "description": "I'll pay (euros or Ğ1)",
+      "example": "E.g. I'm buying a second-hand drill"
+    },
+    "loan_request": {
+      "label": "Borrowing",
+      "description": "For a limited time",
+      "example": "E.g. I'm borrowing a ladder for the weekend"
+    }
+  }
+}

@@ -54,6 +54,8 @@ yarn install
 yarn run dev
 ```
 
+The backend targets an ActivityPods **2.3** Pod provider (`next` branch): `@activitypods/app` must be 2.3.x and `@semapps/*` 1.2.x. The 2.2/1.1 releases still expect the `interop:DataGrant`s that 2.3 removed — with them, the app's registration silently fails on the backend side (`One or more required access needs have not been granted` in the Bull queue), no inbox/outbox listener gets created, and the frontend shows "The app is not listening to …". When linking the local framework (see [below](#linking-to-semappsactivitypods-packages-optional)), note it is TypeScript, hence `yarn run dev` going through `tsx`.
+
 This will bootstrap the server and, if there are no errors, finish with a message telling you that Moleculer's ServiceBroker has started.
 
 You can see the application details at http://localhost:3001/app
@@ -157,6 +159,8 @@ LETSENCRYPT_EMAIL=
 FUSEKI_PASSWORD=
 MAPBOX_ACCESS_TOKEN=
 POD_PROVIDER_BASE_URL=  # If you want to enforce a Pod provider for this app
+PORTEJUNES_URL=  # If set, shows an "Envoyer des Ğ1" button on ad posters' profiles
+DONATION_URL=  # If set, shows a "Soutenir cette application" link at the bottom of the sidebar
 ```
 
 If you want to customize more thoroughly the app, you can do the same with the `.env.production` files in the /backend and /frontend directories (copy them to a `.env.production.local` file). Note all env files ending with `.local` are not commited.

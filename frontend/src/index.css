@@ -1,23 +1,43 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  background-color: #417EDA;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
-.MuiScopedCssBaseline-root {
-  background-color: unset;
-}
-
-/* a, a:hover, a:active, a:visited {
-  color: #D2123F;
+a {
+  color: #1677ff;
   text-decoration: none;
-} */
+}
+
+/** The app's wordmark ("L'Entraide" in the sidebar header) — a warmer, friendlier display face
+ *  than the default UI font, reserved for the brand itself. */
+.app-brand {
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+}
+
+/** Sidebar header and primary buttons share the same light gradient, matching the mockup's
+ *  identity more closely than a flat fill. */
+.app-header-gradient {
+  background: linear-gradient(135deg, #1677ff 0%, #4c9aff 100%) !important;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled) {
+  background: linear-gradient(135deg, #1677ff 0%, #4c9aff 100%);
+  border-color: transparent;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):hover,
+.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):focus {
+  background: linear-gradient(135deg, #0e5fd8 0%, #3c8bff 100%);
+}
+
+/** Antd's picture-card Upload sizes each item with a fixed pixel width/height by default — fine
+ *  on desktop, but on a narrow phone screen that only fits 2 (awkwardly) per row. Force exactly
+ *  3 per row below the mobile breakpoint (matches `useIsMobile`) via a percentage width instead. */
+@media (max-width: 768px) {
+  .image-upload-3col :where(.ant-upload-select, .ant-upload-list-item-container) {
+    width: calc((100% - 16px) / 3) !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+  }
+}
