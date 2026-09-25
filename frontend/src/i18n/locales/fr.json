@@ -1,0 +1,241 @@
+{
+  "notifications": {
+    "success": "Succès",
+    "error": "Erreur",
+    "createSuccess": "{{resource}} créé(e) avec succès",
+    "createError": "Erreur lors de la création : {{statusCode}}",
+    "editSuccess": "{{resource}} mis(e) à jour avec succès",
+    "editError": "Erreur lors de la mise à jour : {{statusCode}}",
+    "deleteSuccess": "{{resource}} supprimé(e) avec succès",
+    "deleteError": "Erreur lors de la suppression : {{statusCode}}"
+  },
+  "buttons": {
+    "logout": "Se déconnecter",
+    "refresh": "Rafraîchir"
+  },
+  "pages": {
+    "login": {
+      "choosePodProvider": "Choisissez l'hébergeur qui héberge votre compte ActivityPods",
+      "podProvidersNotLoaded": "Impossible de charger la liste des hébergeurs",
+      "backToLogin": "Retour à la connexion"
+    }
+  },
+  "apods": {
+    "error": {
+      "app_not_listening": "L'application n'écoute pas {{uri}}",
+      "app_offline": "Le serveur de l'application est hors ligne",
+      "app_status_unavailable": "Impossible de vérifier l'état de l'application"
+    }
+  },
+  "app": {
+    "login": "Se connecter",
+    "post_ad": "Poster une petite annonce",
+    "support": "Soutenir cette application",
+    "neighbour": "Voisin·e"
+  },
+  "menu": {
+    "network": "Réseau",
+    "apps": "Applications",
+    "data": "Mes données",
+    "settings": "Paramètres",
+    "logout": "Se déconnecter"
+  },
+  "kinds": {
+    "offer": "Offre",
+    "request": "Demande"
+  },
+  "resource_types": {
+    "atom": "Matériel",
+    "human": "Compétence",
+    "other": "Autre"
+  },
+  "filters": {
+    "all": "Toutes les petites annonces",
+    "mine": "Mes petites annonces",
+    "offer": "Offres",
+    "offer-atom": "Offres · Matériel",
+    "offer-human": "Offres · Compétence",
+    "offer-other": "Offres · Autre",
+    "request": "Demandes",
+    "request-atom": "Demandes · Matériel",
+    "request-human": "Demandes · Compétence",
+    "request-other": "Demandes · Autre"
+  },
+  "list": {
+    "count_shared_one": "{{count}} petite annonce partagée avec vous",
+    "count_shared_other": "{{count}} petites annonces partagées avec vous",
+    "count_mine_one": "{{count}} petite annonce créée par vous",
+    "count_mine_other": "{{count}} petites annonces créées par vous",
+    "empty": "Aucune petite annonce ici pour le moment"
+  },
+  "show": {
+    "not_found": "Petite annonce introuvable",
+    "back": "Retour",
+    "default_title": "Petite annonce de {{name}}",
+    "edit": "Modifier",
+    "share": "Partager",
+    "comment_placeholder": "Écrire un commentaire",
+    "about_poster": "À propos de l'annonceur"
+  },
+  "card": {
+    "no_expiry": "Sans expiration",
+    "expired": "Expirée",
+    "expires_today": "Expire aujourd'hui",
+    "expires_in": "Expire dans {{count}} j",
+    "posted_on": "Posté le {{date}}",
+    "date_format": "D MMM",
+    "comment": "Commenter",
+    "comments_one": "{{count}} commentaire",
+    "comments_other": "{{count}} commentaires"
+  },
+  "gallery": {
+    "more_one": "+{{count}} photo",
+    "more_other": "+{{count}} photos"
+  },
+  "comments": {
+    "empty": "Aucun commentaire pour le moment"
+  },
+  "poster": {
+    "member_since": "Membre depuis le {{date}}",
+    "date_format": "D MMMM YYYY",
+    "contact": "Contacter",
+    "send_g1": "Envoyer des Ğ1"
+  },
+  "recipients": {
+    "search": "Rechercher",
+    "view": "Voir",
+    "share": "Partager",
+    "out_of_range_one": "{{count}} contact situé au-delà de {{radius}} km non affiché.",
+    "out_of_range_other": "{{count}} contacts situés au-delà de {{radius}} km non affichés.",
+    "none_in_range": "Aucun contact dans un rayon de {{radius}} km. Élargissez le rayon ou désactivez la géolocalisation de votre petite annonce.",
+    "none": "Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des petites annonces."
+  },
+  "location": {
+    "choose": "Choisir une adresse enregistrée",
+    "home_suffix": " (domicile)",
+    "add": "Ajouter une adresse",
+    "name": "Nom de l'adresse",
+    "name_placeholder": "Ex. Domicile, Atelier…",
+    "default_name": "Domicile de {{name}}",
+    "locality": "Localité",
+    "locality_required": "Indiquez une localité",
+    "home": "Adresse de domicile (utilisée par défaut)",
+    "search": "Rechercher une localité",
+    "unavailable": "Recherche d'adresse indisponible",
+    "unavailable_description": "Aucune clé d'accès Mapbox n'a été configurée pour ce site (VITE_MAPBOX_ACCESS_TOKEN). Contactez l'administrateur.",
+    "failed": "La recherche d'adresse a échoué. Vérifiez votre connexion et réessayez."
+  },
+  "upload": {
+    "add": "Ajouter"
+  },
+  "composer": {
+    "heading_create": "Poster une petite annonce",
+    "heading_edit": "Modifier la petite annonce",
+    "heading_share": "Partager la petite annonce",
+    "next": "Suivant",
+    "next_recipients": "Suivant : destinataires",
+    "send": "Envoyer",
+    "save": "Enregistrer",
+    "back": "Retour",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "delete_confirm": "Supprimer cette petite annonce ?",
+    "published": "Petite annonce publiée",
+    "updated": "Petite annonce mise à jour",
+    "shared": "Petite annonce partagée",
+    "deleted": "Petite annonce supprimée",
+    "kind": {
+      "label": "Je souhaite…",
+      "required": "Indiquez si vous proposez ou demandez quelque chose",
+      "locked": "Ne peut plus être modifié une fois la petite annonce publiée.",
+      "offer": "Proposer",
+      "offer_description": "J'offre quelque chose à mon réseau",
+      "request": "Demander",
+      "request_description": "Je cherche quelque chose"
+    },
+    "resource_type": {
+      "label": "Il s'agit de…",
+      "required": "Précisez de quoi il s'agit",
+      "atom_description": "Objet, outil, véhicule…",
+      "human_description": "Coup de main, savoir-faire…",
+      "other_description": "Hébergement, covoiturage…"
+    },
+    "exchange_type": {
+      "label": "Type d'échange",
+      "required": "Choisissez un type d'échange"
+    },
+    "title": {
+      "label": "Titre",
+      "required": "Donnez un titre à votre petite annonce",
+      "placeholder": "Ex. Outils de jardinage, cours de guitare, covoiturage…"
+    },
+    "content": {
+      "label": "Votre petite annonce",
+      "required": "Décrivez votre petite annonce",
+      "placeholder_offer": "Bonjour, je propose…",
+      "placeholder_request": "Bonjour, je cherche…"
+    },
+    "images": "Photos (max 10)",
+    "geolocated": {
+      "label": "Annonce géolocalisée",
+      "help": "Une petite annonce géolocalisée est rattachée à une adresse et à un rayon de diffusion : elle n'est visible que par les personnes situées dans ce périmètre. Idéal pour du matériel à venir chercher ou un coup de main sur place. Désactivez-la si votre annonce s'adresse à tout votre réseau, où qu'il se trouve.",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "locality": {
+      "label": "Localité",
+      "required": "Indiquez une localité"
+    },
+    "radius": {
+      "label": "Rayon de diffusion",
+      "help": "Les personnes situées au-delà de ce rayon ne verront pas votre petite annonce."
+    },
+    "expiry": {
+      "label": "Expire dans (jours)",
+      "help": "Passé ce délai, votre petite annonce disparaît du fil de vos contacts. Elle reste dans « Mes petites annonces », d'où vous pouvez la prolonger.",
+      "required": "Indiquez une durée"
+    }
+  },
+  "exchange_types": {
+    "gift_offer": {
+      "label": "Don",
+      "description": "Gratuitement, sans contrepartie",
+      "example": "Ex. Je donne des outils de jardinage"
+    },
+    "barter_offer": {
+      "label": "Troc",
+      "description": "Contre un autre bien ou service",
+      "example": "Ex. J'échange des légumes contre des œufs"
+    },
+    "sale_offer": {
+      "label": "Vente",
+      "description": "Contre de l'argent (euros ou Ğ1)",
+      "example": "Ex. Je vends un vélo d'enfant"
+    },
+    "loan_offer": {
+      "label": "Prêt",
+      "description": "Pour une durée limitée",
+      "example": "Ex. Je prête ma remorque"
+    },
+    "gift_request": {
+      "label": "Don",
+      "description": "Je cherche à récupérer gratuitement",
+      "example": "Ex. Je cherche un canapé à récupérer"
+    },
+    "barter_request": {
+      "label": "Troc",
+      "description": "J'offre un autre bien ou service en échange",
+      "example": "Ex. Je cherche des cours d'anglais contre des cours de guitare"
+    },
+    "purchase_request": {
+      "label": "Achat",
+      "description": "Je paie (euros ou Ğ1)",
+      "example": "Ex. J'achète une perceuse d'occasion"
+    },
+    "loan_request": {
+      "label": "Emprunt",
+      "description": "Pour une durée limitée",
+      "example": "Ex. J'emprunte une échelle pour le week-end"
+    }
+  }
+}
