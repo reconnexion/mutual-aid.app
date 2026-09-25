@@ -32,6 +32,10 @@ ENV VITE_APP_NAME=$VITE_APP_NAME \
     VITE_PORTEJUNES_URL=$VITE_PORTEJUNES_URL \
     VITE_DONATION_URL=$VITE_DONATION_URL
 
+# Cap the V8 heap of tsc/vite: the build runs on the Coolify server next to
+# Fuseki, which must not get OOM-killed by a build.
+ENV NODE_OPTIONS=--max-old-space-size=1536
+
 WORKDIR /app/frontend
 
 # Install packages first so that Docker doesn't run `yarn install` if the packages haven't changed
