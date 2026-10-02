@@ -14,7 +14,6 @@ import useIsMobile from '../hooks/useIsMobile';
 import { useComposer } from '../context/ComposerContext';
 import { useMobileNav } from '../context/MobileNavContext';
 import { HEADER_HEIGHT } from '../config/layout';
-import { retryRefresh } from '../utils/retry';
 import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
 
 const { Title } = Typography;
@@ -56,9 +55,6 @@ const AnnonceShowPage = () => {
     setDraft('');
     // The comment shows up straight away (see `useComments`); give the text back if it failed.
     if (!(await send(content))) setDraft(content);
-    // The very first comment attaches a brand new `as:replies` collection to the annonce itself
-    // — refetch it too (not just the collection), or its URI never reaches this page's state.
-    if (!annonce.replies) retryRefresh(() => query.refetch());
   };
 
   return (

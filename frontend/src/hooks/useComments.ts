@@ -4,6 +4,7 @@ import { App } from 'antd';
 import useActivityCollection from './useActivityCollection';
 import useOutbox, { AS_PUBLIC } from './useOutbox';
 import { retryRefresh } from '../utils/retry';
+import { collectionUriOf } from '../utils/collections';
 import type { AnnonceRecord, ReplyRecord } from '../types';
 
 /** A comment shown before the Pod has added it to `as:replies` — see `send`. */
@@ -19,7 +20,7 @@ type PendingReply = ReplyRecord & {
  *  Pod provider (posting `Create{Note, inReplyTo}` to the outbox is all that's needed). */
 const useComments = (annonce: AnnonceRecord) => {
   const { message } = App.useApp();
-  const { items: serverReplies, isLoading, invalidate } = useActivityCollection<ReplyRecord>(annonce.replies);
+  const { items: serverReplies, isLoading, invalidate } = useActivityCollection<ReplyRecord>(collectionUriOf(annonce, 'replies'));
   const outbox = useOutbox();
   const [pending, setPending] = useState<PendingReply[]>([]);
 

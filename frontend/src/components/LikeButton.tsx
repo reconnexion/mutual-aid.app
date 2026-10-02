@@ -1,26 +1,25 @@
 import { useState } from 'react';
 import { App, Button } from 'antd';
 import { HeartFilled, HeartOutlined } from '@ant-design/icons';
-import { useGetIdentity, useInvalidate } from '@refinedev/core';
+import { useGetIdentity } from '@refinedev/core';
 
 import useActivityCollection from '../hooks/useActivityCollection';
 import useOutbox, { AS_PUBLIC } from '../hooks/useOutbox';
 import { retryRefresh } from '../utils/retry';
-import type { AnnonceKind, AnnonceRecord, Identity } from '../types';
+import { collectionUriOf } from '../utils/collections';
+import type { AnnonceRecord, Identity } from '../types';
 
 type Props = {
   annonce: AnnonceRecord;
-  kind: AnnonceKind;
 };
 
 /** `Like`/`Undo{Like}` toggle. The Pod auto-maintains an `as:likes` collection (actor URIs) on
  *  the object once at least one `Like` has been posted — we just read and toggle it. */
-const LikeButton = ({ annonce, kind }: Props) => {
+const LikeButton = ({ annonce }: Props) => {
   const { message } = App.useApp();
   const { data: identity } = useGetIdentity<Identity>();
   const outbox = useOutbox();
-  const invalidate = useInvalidate();
-  const { items: likes, isLoading, invalidate: invalidateLikes } = useActivityCollection<string>(annonce.likes);
+  const { items: likes, isLoading, invalidate: invalidateLikes } = useActivityCollection<string>(collectionUriOf(annonce, 'likes'));
   const [pending, setPending] = useState(false);
 
   const liked = !!identity && likes.includes(identity.id);
@@ -41,12 +40,8 @@ const LikeButton = ({ annonce, kind }: Props) => {
       } else {
         await outbox.postPlain({ type: 'Like', actor: outbox.owner, object: annonce.id, to });
       }
-      retryRefresh(() => {
-        invalidateLikes();
-        // The very first like attaches a brand new `as:likes` collection to the annonce itself —
-        // without this, its URI never reaches this component (same issue as first comments).
-        if (!annonce.likes) invalidate({ resource: kind, id: annonce.id, invalidates: ['detail', 'list'] });
-      });
+      // The collection URI is known even before the first like created it (`collectionUriOf`).
+      retryRefresh(invalidateLikes);
     } catch (e: any) {
       message.error(e.message);
     }

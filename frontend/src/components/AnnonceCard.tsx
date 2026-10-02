@@ -12,6 +12,7 @@ import useProfileUrl from '../hooks/useProfileUrl';
 import { formatUsername } from '../utils/formatUsername';
 import { AVATAR_SIZE } from '../config/layout';
 import { exchangeTypeCurie, imagesOf, isExpired, literalValue } from '../utils/ontology';
+import { collectionUriOf } from '../utils/collections';
 import { exchangeTypeLabelKey } from '../config/exchangeTypes';
 import { EXCHANGE_ICON, KIND_ICON } from '../config/icons';
 import type { AnnonceKind, AnnonceRecord } from '../types';
@@ -42,7 +43,7 @@ type Props = {
 const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const translate = useTranslate();
   const { data: author } = useActorProfile(annonce['dc:creator']);
-  const { items: replies } = useActivityCollection(annonce.replies);
+  const { items: replies } = useActivityCollection(collectionUriOf(annonce, 'replies'));
   const profileUrl = useProfileUrl();
   const place = annonce.location;
   const images = imagesOf(annonce['pair:depictedBy']);
@@ -126,7 +127,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
                 {replies.length > 0 ? translate('card.comments', { count: replies.length }) : translate('card.comment')}
               </Button>
             </Link>
-            <LikeButton annonce={annonce} kind={kind} />
+            <LikeButton annonce={annonce} />
           </div>
         )}
       </div>

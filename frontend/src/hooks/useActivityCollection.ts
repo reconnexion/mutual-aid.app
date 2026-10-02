@@ -8,7 +8,8 @@ const EMPTY_ITEMS: any[] = [];
 /**
  * Read an ActivityPub (Ordered)Collection at a given URI — used for `replies` (comments, returned
  * fully dereferenced) and `likes` (actor URIs). Follows the collection's `first` page if it has
- * one; these collections are small and bounded so a single page fetch is enough.
+ * one; these collections are small and bounded so a single page fetch is enough. A collection
+ * that doesn't exist (yet) is returned as empty — see `utils/collections.ts`.
  */
 const useActivityCollection = <T = any,>(collectionUri?: string) => {
   const session = authProvider.getSession();
@@ -19,7 +20,13 @@ const useActivityCollection = <T = any,>(collectionUri?: string) => {
   const query = useQuery({
     queryKey,
     queryFn: async () => {
-      let { json } = await fetchJson(collectionUri!, {}, session?.token);
+      let json;
+      try {
+        ({ json } = await fetchJson(collectionUri!, {}, session?.token));
+      } catch (e: any) {
+        if (e.status === 404) return [];
+        throw e;
+      }
 
       if ((json.type === 'OrderedCollection' || json.type === 'Collection') && json.first) {
         const firstItems = json.first?.items || json.first?.orderedItems;
