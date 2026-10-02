@@ -13,6 +13,7 @@ import useAnnonces from '../hooks/useAnnonces';
 import useIsMobile from '../hooks/useIsMobile';
 import useOwnActor from '../hooks/useOwnActor';
 import { FILTER_ROWS, matchesFilter, type FilterId } from '../config/filters';
+import { FILTER_ICON } from '../config/kinds';
 import { APP_NAME, DONATION_URL } from '../config/env';
 import { authProvider } from '../providers';
 import { HEADER_HEIGHT } from '../config/layout';
@@ -96,7 +97,9 @@ const AppShell = ({ children }: { children: ReactNode }) => {
                 lineHeight: '20px'
               }}
             >
+              {/* Same 14px width as the icons, so every label lines up. */}
               {row.indent && <span style={{ flex: '0 0 14px' }} />}
+              {FILTER_ICON[row.id] && <span style={{ flex: '0 0 14px', fontSize: 14, color: 'rgba(0,0,0,0.65)', display: 'inline-flex' }}>{FILTER_ICON[row.id]}</span>}
               <span
                 style={{
                   flex: 1,

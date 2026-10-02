@@ -14,15 +14,19 @@ type Props<T extends string> = {
   options: ChoiceOption<T>[];
   /** Injected by `Form.Item` — nothing selected until the user picks a card. */
   value?: T;
-  onChange?: (value: T) => void;
+  onChange?: (value: T | undefined) => void;
   disabled?: boolean;
+  /** For optional choices: clicking the selected card unselects it. */
+  allowDeselect?: boolean;
+  /** Narrowest a card may get before the row wraps — lower it to fit more cards on one line. */
+  minCardWidth?: number;
 };
 
 /** A radio group rendered as a row of cards, each with a title and a one-line description — for
  *  the composer's "Je souhaite…" / "Il s'agit de…" choices, where a bare `Segmented` (with a
  *  preselected default) didn't make it obvious there was a decision to make, nor what the
  *  options meant. Wraps to as many rows as needed on narrow screens. */
-const ChoiceCards = <T extends string>({ options, value, onChange, disabled }: Props<T>) => {
+const ChoiceCards = <T extends string>({ options, value, onChange, disabled, allowDeselect, minCardWidth = 150 }: Props<T>) => {
   const { token } = theme.useToken();
   // Mirrors the red outline an `Input` gets when its `Form.Item` fails validation.
   const { status } = Form.Item.useStatus();
@@ -31,10 +35,11 @@ const ChoiceCards = <T extends string>({ options, value, onChange, disabled }: P
   return (
     <div
       role="radiogroup"
-      style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}
+      style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${minCardWidth}px, 1fr))`, gap: 8 }}
     >
       {options.map(option => {
         const selected = option.value === value;
+        const select = () => onChange?.(selected && allowDeselect ? undefined : option.value);
         return (
           <div
             key={option.value}
@@ -42,11 +47,11 @@ const ChoiceCards = <T extends string>({ options, value, onChange, disabled }: P
             aria-checked={selected}
             aria-disabled={disabled}
             tabIndex={disabled ? -1 : 0}
-            onClick={() => !disabled && onChange?.(option.value)}
+            onClick={() => !disabled && select()}
             onKeyDown={e => {
               if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
-                onChange?.(option.value);
+                select();
               }
             }}
             style={{

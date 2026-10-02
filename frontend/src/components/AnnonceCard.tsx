@@ -17,10 +17,15 @@ import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Paragraph, Text } = Typography;
 
-export const CAT_COLOR: Record<AnnonceKind, string> = { offer: 'green', request: 'blue' };
+export const CAT_COLOR: Record<AnnonceKind, string> = { offer: 'green', request: 'blue', announcement: 'volcano' };
 
+/** `undefined` for announcements, which aren't about a resource. */
 export const resourceTypeOf = (annonce: AnnonceRecord, kind: AnnonceKind) =>
-  resourceTypeCurie(kind === 'offer' ? annonce['maid:offerOfResourceType'] : annonce['maid:requestOfResourceType']);
+  kind === 'offer'
+    ? resourceTypeCurie(annonce['maid:offerOfResourceType'])
+    : kind === 'request'
+      ? resourceTypeCurie(annonce['maid:requestOfResourceType'])
+      : undefined;
 
 export const SUB_LABEL_KEY: Record<string, string> = {
   'pair:AtomBasedResource': 'resource_types.atom',

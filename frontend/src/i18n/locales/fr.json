@@ -42,7 +42,8 @@
   },
   "kinds": {
     "offer": "Offre",
-    "request": "Demande"
+    "request": "Demande",
+    "announcement": "Annonce"
   },
   "resource_types": {
     "atom": "Matériel",
@@ -59,7 +60,8 @@
     "request": "Demandes",
     "request-atom": "Demandes · Matériel",
     "request-human": "Demandes · Compétence",
-    "request-other": "Demandes · Autre"
+    "request-other": "Demandes · Autre",
+    "announcement": "Annonces"
   },
   "list": {
     "count_shared_one": "{{count}} petite annonce partagée avec vous",
@@ -133,7 +135,6 @@
     "heading_edit": "Modifier la petite annonce",
     "heading_share": "Partager la petite annonce",
     "next": "Suivant",
-    "next_recipients": "Suivant : destinataires",
     "send": "Envoyer",
     "save": "Enregistrer",
     "back": "Retour",
@@ -146,12 +147,13 @@
     "deleted": "Petite annonce supprimée",
     "kind": {
       "label": "Je souhaite…",
-      "required": "Indiquez si vous proposez ou demandez quelque chose",
-      "locked": "Ne peut plus être modifié une fois la petite annonce publiée.",
+      "required": "Indiquez si vous proposez, demandez ou annoncez quelque chose",
       "offer": "Proposer",
       "offer_description": "J'offre quelque chose à mon réseau",
       "request": "Demander",
-      "request_description": "Je cherche quelque chose"
+      "request_description": "Je cherche quelque chose",
+      "announcement": "Annoncer",
+      "announcement_description": "Je partage une information"
     },
     "resource_type": {
       "label": "Il s'agit de…",
@@ -161,39 +163,44 @@
       "other_description": "Hébergement, covoiturage…"
     },
     "exchange_type": {
-      "label": "Type d'échange",
-      "required": "Choisissez un type d'échange"
+      "label": "Type d'échange (facultatif)"
     },
     "title": {
       "label": "Titre",
       "required": "Donnez un titre à votre petite annonce",
-      "placeholder": "Ex. Outils de jardinage, cours de guitare, covoiturage…"
+      "placeholder": "Ex. Outils de jardinage, cours de guitare, covoiturage…",
+      "placeholder_announcement": "Ex. Fête de quartier samedi, marché de producteurs…"
     },
     "content": {
       "label": "Votre petite annonce",
       "required": "Décrivez votre petite annonce",
       "placeholder_offer": "Bonjour, je propose…",
-      "placeholder_request": "Bonjour, je cherche…"
+      "placeholder_request": "Bonjour, je cherche…",
+      "placeholder_announcement": "Bonjour, je voulais vous informer que…"
     },
     "images": "Photos (max 10)",
+    "options": "Options",
     "geolocated": {
-      "label": "Annonce géolocalisée",
-      "help": "Une petite annonce géolocalisée est rattachée à une adresse et à un rayon de diffusion : elle n'est visible que par les personnes situées dans ce périmètre. Idéal pour du matériel à venir chercher ou un coup de main sur place. Désactivez-la si votre annonce s'adresse à tout votre réseau, où qu'il se trouve.",
-      "yes": "Oui",
-      "no": "Non"
+      "label": "Limiter la portée géographique de l'annonce",
+      "help": "Votre petite annonce n'est alors visible que par les personnes situées dans un rayon autour du point de départ. Idéal pour du matériel à venir chercher ou un coup de main sur place. Laissez décoché si elle s'adresse à tout votre réseau, où qu'il se trouve."
     },
     "locality": {
-      "label": "Localité",
-      "required": "Indiquez une localité"
+      "label": "Point de départ",
+      "required": "Indiquez un point de départ"
     },
     "radius": {
       "label": "Rayon de diffusion",
       "help": "Les personnes situées au-delà de ce rayon ne verront pas votre petite annonce."
     },
+    "limited_duration": {
+      "label": "Limiter la durée de l'annonce",
+      "help": "Sans limite, votre petite annonce reste visible jusqu'à ce que vous la supprimiez."
+    },
     "expiry": {
-      "label": "Expire dans (jours)",
+      "label": "Expire dans",
       "help": "Passé ce délai, votre petite annonce disparaît du fil de vos contacts. Elle reste dans « Mes petites annonces », d'où vous pouvez la prolonger.",
-      "required": "Indiquez une durée"
+      "required": "Indiquez une durée",
+      "days": "jours"
     }
   },
   "exchange_types": {
@@ -229,7 +236,7 @@
     },
     "purchase_request": {
       "label": "Achat",
-      "description": "Je paie (euros ou Ğ1)",
+      "description": "Je peux payer (euros ou Ğ1)",
       "example": "Ex. J'achète une perceuse d'occasion"
     },
     "loan_request": {

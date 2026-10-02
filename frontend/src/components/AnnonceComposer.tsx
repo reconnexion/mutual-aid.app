@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { App, Button, Form, Input, InputNumber, Modal, Popconfirm, Slider, Space, Switch, Tooltip } from 'antd';
+import { App, Button, Checkbox, Form, Input, InputNumber, Modal, Popconfirm, Slider, Space, Tooltip } from 'antd';
 import {
   AppstoreOutlined,
   BulbOutlined,
   ClockCircleOutlined,
   CloseOutlined,
   DeleteOutlined,
-  EuroOutlined,
   GiftOutlined,
   QuestionCircleOutlined,
-  SearchOutlined,
-  SendOutlined,
   ShoppingOutlined,
   SwapOutlined,
+  TagOutlined,
   ToolOutlined
 } from '@ant-design/icons';
 import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useTranslate, useUpdate } from '@refinedev/core';
@@ -27,6 +25,7 @@ import useIsMobile from '../hooks/useIsMobile';
 import useOutbox from '../hooks/useOutbox';
 import { exchangeTypeCurie, imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
 import { exchangeTypeDef, exchangeTypesFor } from '../config/exchangeTypes';
+import { KIND_ICON } from '../config/kinds';
 import { geoPoint } from '../utils/geo';
 import type { AnnonceKind, AnnonceRecord, ExchangeType, Identity, InvitationState, LocationRecord, ResourceType } from '../types';
 
@@ -46,9 +45,11 @@ type Props = {
   onSaved?: () => void;
 };
 
-const RESOURCE_TYPE_PREDICATE: Record<AnnonceKind, string> = {
+/** Announcements aren't about a resource, so they have neither this nor an exchange type. */
+const RESOURCE_TYPE_PREDICATE: Record<AnnonceKind, string | undefined> = {
   offer: 'maid:offerOfResourceType',
-  request: 'maid:requestOfResourceType'
+  request: 'maid:requestOfResourceType',
+  announcement: undefined
 };
 
 type Translate = (key: string, options?: any) => string;
@@ -57,8 +58,9 @@ type Translate = (key: string, options?: any) => string;
 // tabs rather than a decision, and ads ended up in the wrong category. The descriptions are what
 // actually explain the taxonomy (offer/request × pair:AtomBasedResource/HumanBasedResource/Resource).
 const kindOptions = (t: Translate): ChoiceOption<AnnonceKind>[] => [
-  { value: 'offer', title: t('composer.kind.offer'), description: t('composer.kind.offer_description'), icon: <SendOutlined /> },
-  { value: 'request', title: t('composer.kind.request'), description: t('composer.kind.request_description'), icon: <SearchOutlined /> }
+  { value: 'offer', title: t('composer.kind.offer'), description: t('composer.kind.offer_description'), icon: KIND_ICON.offer },
+  { value: 'request', title: t('composer.kind.request'), description: t('composer.kind.request_description'), icon: KIND_ICON.request },
+  { value: 'announcement', title: t('composer.kind.announcement'), description: t('composer.kind.announcement_description'), icon: KIND_ICON.announcement }
 ];
 
 const resourceTypeOptions = (t: Translate): ChoiceOption<ResourceType>[] => [
@@ -70,7 +72,8 @@ const resourceTypeOptions = (t: Translate): ChoiceOption<ResourceType>[] => [
 const EXCHANGE_ICON: Record<ExchangeType, ReactNode> = {
   'maid:GiftOffer': <GiftOutlined />,
   'maid:BarterOffer': <SwapOutlined />,
-  'maid:SaleOffer': <EuroOutlined />,
+  // A price tag rather than a currency sign: sales can be paid in euros or in Ğ1.
+  'maid:SaleOffer': <TagOutlined />,
   'maid:LoanOffer': <ClockCircleOutlined />,
   'maid:GiftRequest': <GiftOutlined />,
   'maid:BarterRequest': <SwapOutlined />,
@@ -78,27 +81,29 @@ const EXCHANGE_ICON: Record<ExchangeType, ReactNode> = {
   'maid:LoanRequest': <ClockCircleOutlined />
 };
 
-// The "Titre" placeholder comes from the chosen exchange type (see `exchangeTypes.ts`); the body's
-// only depends on offer vs request.
+// The "Titre" placeholder comes from the chosen exchange type (see `exchangeTypes.ts`), or is
+// specific to announcements; the body's only depends on the kind.
 const CONTENT_PLACEHOLDER_KEY: Record<AnnonceKind, string> = {
   offer: 'composer.content.placeholder_offer',
-  request: 'composer.content.placeholder_request'
+  request: 'composer.content.placeholder_request',
+  announcement: 'composer.content.placeholder_announcement'
 };
 
-/** Pages of the dialog. `create` walks through all four; `edit` folds "Diffusion" (geolocation
- *  + expiry) into the details page — the explanatory text there is for first-timers — and skips
- *  the recipients (that's what `share` is for); `share` shows only them. The form pages stay
+/** Pages of the dialog. `create` walks through all four; `edit` skips the type page (it can't
+ *  change after publication — the fields stay mounted, so their values are still saved), folds
+ *  "Diffusion" (geolocation + expiry) into the details page — the explanatory text there is for
+ *  first-timers — and skips the recipients (that's what `share` is for); `share` shows only them. The form pages stay
  *  mounted (hidden with `display: none`) so values survive going back and forth. */
 type Step = 'type' | 'details' | 'distribution' | 'recipients';
 const STEPS: Record<ComposerMode, Step[]> = {
   create: ['type', 'details', 'distribution', 'recipients'],
-  edit: ['type', 'details'],
+  edit: ['details'],
   share: ['recipients']
 };
 const STEP_FIELDS: Record<Step, (keyof FormValues)[]> = {
   type: ['kind', 'resourceType', 'exchangeType'],
   details: ['title', 'content', 'images'],
-  distribution: ['geolocated', 'locationId', 'radius', 'expiryDays'],
+  distribution: ['geolocated', 'locationId', 'radius', 'limitedDuration', 'expiryDays'],
   recipients: []
 };
 
@@ -108,10 +113,12 @@ type FormValues = {
   title: string;
   content: string;
   resourceType: ResourceType;
-  /** Off = no `location` on the ad at all (the "Localité"/"Rayon" fields are hidden). */
+  /** Off = no `location` on the ad at all (the "Point de départ"/"Rayon" fields are hidden). */
   geolocated: boolean;
   locationId?: string;
   radius: number;
+  /** Off = no `maid:expirationDate`: the ad stays until deleted ("Expire dans" is hidden). */
+  limitedDuration: boolean;
   expiryDays: number;
   images?: string[];
 };
@@ -137,6 +144,21 @@ const LabelWithHelp = ({ label, help }: { label: string; help: string }) => (
   </Space>
 );
 
+/** An opt-in setting of the "Diffusion" page: a checkbox, with its (i) tooltip kept outside the
+ *  checkbox's label so that hovering/tapping it doesn't toggle the option. */
+const OptionCheckbox = ({ name, label, help }: { name: keyof FormValues; label: string; help: string }) => (
+  <Form.Item style={{ marginBottom: 12 }}>
+    <Space size={4}>
+      <Form.Item name={name} valuePropName="checked" noStyle>
+        <Checkbox>{label}</Checkbox>
+      </Form.Item>
+      <Tooltip title={help}>
+        <QuestionCircleOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
+      </Tooltip>
+    </Space>
+  </Form.Item>
+);
+
 const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle, onClose, onSaved }: Props) => {
   const { message } = App.useApp();
   const translate = useTranslate();
@@ -147,7 +169,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
   const kind: AnnonceKind | undefined = Form.useWatch('kind', form) ?? (mode === 'create' ? undefined : initialKind);
   const resourceType: ResourceType | undefined = Form.useWatch('resourceType', form);
   const exchangeType: ExchangeType | undefined = Form.useWatch('exchangeType', form);
-  const geolocated: boolean = Form.useWatch('geolocated', form) ?? true;
+  const geolocated: boolean = Form.useWatch('geolocated', form) ?? false;
+  const limitedDuration: boolean = Form.useWatch('limitedDuration', form) ?? false;
   const locationId: string | undefined = Form.useWatch('locationId', form);
   const radius: number | undefined = Form.useWatch('radius', form);
   const [stepIndex, setStepIndex] = useState(0);
@@ -198,20 +221,21 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         geolocated: !!annonce.location,
         title: annonce.name,
         content: annonce.content,
-        resourceType: resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]]),
+        resourceType: RESOURCE_TYPE_PREDICATE[initialKind] ? resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]!]) : undefined,
         exchangeType: exchangeTypeCurie(annonce['pair:hasType']),
         radius,
+        limitedDuration: !!expirationDate,
         expiryDays: expirationDate ? Math.max(1, dayjs(expirationDate).diff(dayjs(), 'day')) : 30,
         images: imagesOf(annonce['pair:depictedBy'])
       });
     } else {
       form.resetFields();
-      form.setFieldsValue({ title: initialTitle, geolocated: true, radius: 15, expiryDays: 30 });
+      form.setFieldsValue({ title: initialTitle, geolocated: false, radius: 15, limitedDuration: false, expiryDays: 30 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, annonce, mode, initialTitle]);
 
-  // Derives the "Localité" field once the saved-addresses list has loaded — separate from the
+  // Derives the "Point de départ" field once the saved-addresses list has loaded — separate from the
   // reset effect above so that adding a new address mid-composing (which also changes
   // `locations.data`) doesn't wipe fields the user has already filled in.
   useEffect(() => {
@@ -223,7 +247,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     } else if (annonce?.location) {
       // `annonce.location` is an embedded snapshot copied at submit time (see `PlaceRecord`), not
       // a reference to a saved `LocationRecord` — match it back to one by name/coordinates so the
-      // "Localité" dropdown reflects it. No match (e.g. the saved address was since edited or
+      // "Point de départ" dropdown reflects it. No match (e.g. the saved address was since edited or
       // deleted) just leaves it unselected; the ad's own location is unaffected either way.
       const match = locations.data.find(
         l =>
@@ -252,7 +276,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
   const stepCounter = steps.length > 1 ? ` (${stepIndex + 1}/${steps.length})` : '';
 
   // Only read after the form has been validated (submit/delete), by which point `kind` is set.
-  const resourceUri = kind === 'request' ? 'request' : 'offer';
+  const resourceUri: AnnonceKind = kind ?? 'offer';
 
   // Validates only the current page's fields, so an error on page 2 can't block page 1's "Suivant".
   const goNext = async () => {
@@ -276,8 +300,15 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
 
       if (mode !== 'share') {
         // In `create` every page was validated on "Suivant"; `edit` ends on the details page, so
-        // it has to be checked here (a required field left empty must not silently save).
-        const values = await form.validateFields();
+        // it has to be checked here (a required field left empty must not silently save). Only its
+        // visible fields, though: an error on the hidden type page couldn't be seen nor fixed.
+        let values: FormValues;
+        if (mode === 'edit') {
+          await form.validateFields([...STEP_FIELDS.details, ...STEP_FIELDS.distribution]);
+          values = form.getFieldsValue(true);
+        } else {
+          values = await form.validateFields();
+        }
         const selectedLocation = locations.data.find(l => l.id === values.locationId);
         // `undefined` (not geolocated) drops any existing `location` on update, since the data
         // provider PUTs the merged resource and JSON serialization omits undefined keys.
@@ -289,14 +320,16 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
               ? { ...annonce.location, radius: values.radius }
               : undefined;
 
+        const resourceTypePredicate = RESOURCE_TYPE_PREDICATE[values.kind ?? initialKind];
         const variables: Record<string, any> = {
           name: values.title,
           content: values.content,
           location,
           'pair:depictedBy': values.images,
-          [RESOURCE_TYPE_PREDICATE[values.kind ?? initialKind]]: values.resourceType,
-          'pair:hasType': values.exchangeType,
-          'maid:expirationDate': dayjs().add(values.expiryDays, 'day').toISOString()
+          // Values picked before switching to "Annoncer" stay in the form store: drop them.
+          ...(resourceTypePredicate && { [resourceTypePredicate]: values.resourceType, 'pair:hasType': values.exchangeType }),
+          // `undefined` drops an existing expiration date on update, same as `location` above.
+          'maid:expirationDate': values.limitedDuration ? dayjs().add(values.expiryDays, 'day').toISOString() : undefined
         };
 
         if (mode === 'create') {
@@ -367,7 +400,7 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
   };
 
   const primaryLabel = translate(
-    !isLastStep ? (steps[stepIndex + 1] === 'recipients' ? 'composer.next_recipients' : 'composer.next') : mode === 'create' ? 'composer.send' : 'composer.save'
+    !isLastStep ? 'composer.next' : mode === 'create' ? 'composer.send' : 'composer.save'
   );
   const onPrimary = !isLastStep ? goNext : submit;
 
@@ -378,50 +411,43 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
   };
 
   // Geolocation + expiry. Its own page in `create` (with room to explain the concept), appended
-  // to the details page in `edit`.
+  // to the details page in `edit`. Both limits are opt-in: each checkbox reveals its own fields.
+  // Wrapped in a name-less `Form.Item` only for its label, so "Options" looks like the other
+  // fields' labels.
   const distribution = (
-    <>
-      <Form.Item
-        name="geolocated"
-        valuePropName="checked"
-        label={
-          <LabelWithHelp
-            label={translate('composer.geolocated.label')}
-            help={translate('composer.geolocated.help')}
-          />
-        }
-      >
-        <Switch checkedChildren={translate('composer.geolocated.yes')} unCheckedChildren={translate('composer.geolocated.no')} />
-      </Form.Item>
+    <Form.Item label={translate('composer.options')} style={{ marginBottom: 0 }}>
+      <OptionCheckbox name="geolocated" label={translate('composer.geolocated.label')} help={translate('composer.geolocated.help')} />
       {geolocated && (
-        <>
+        <div style={{ paddingLeft: 24 }}>
           <Form.Item name="locationId" label={translate('composer.locality.label')} rules={[{ required: !annonce?.location, message: translate('composer.locality.required') }]}>
             <LocationSelect />
           </Form.Item>
           <Form.Item name="radius" label={<LabelWithHelp label={translate('composer.radius.label')} help={translate('composer.radius.help')} />}>
             <Slider min={5} max={50} step={5} marks={{ 5: '5 km', 50: '50 km' }} />
           </Form.Item>
-        </>
+        </div>
       )}
-      <Form.Item
-        name="expiryDays"
-        label={
-          <LabelWithHelp
-            label={translate('composer.expiry.label')}
-            help={translate('composer.expiry.help')}
-          />
-        }
-        rules={[{ required: true, message: translate('composer.expiry.required') }]}
-      >
-        <InputNumber min={1} max={365} />
-      </Form.Item>
-    </>
+      <OptionCheckbox name="limitedDuration" label={translate('composer.limited_duration.label')} help={translate('composer.limited_duration.help')} />
+      {limitedDuration && (
+        <div style={{ paddingLeft: 24 }}>
+          <Form.Item
+            name="expiryDays"
+            label={<LabelWithHelp label={translate('composer.expiry.label')} help={translate('composer.expiry.help')} />}
+            rules={[{ required: true, message: translate('composer.expiry.required') }]}
+          >
+            <InputNumber min={1} max={365} suffix={translate('composer.expiry.days')} style={{ width: 140 }} />
+          </Form.Item>
+        </div>
+      )}
+    </Form.Item>
   );
 
   return (
     <Modal
       open={open}
       onCancel={onClose}
+      // A misclick outside would throw away a multi-step form; close with the × or "Annuler".
+      maskClosable={false}
       title={
         <span className="app-brand" style={{ color: '#fff', fontSize: 18 }}>
           {heading}
@@ -474,17 +500,23 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
             name="kind"
             label={translate('composer.kind.label')}
             rules={[{ required: true, message: translate('composer.kind.required') }]}
-            extra={mode === 'edit' ? translate('composer.kind.locked') : undefined}
           >
-            <ChoiceCards options={kindOptions(translate)} disabled={mode === 'edit'} />
+            <ChoiceCards options={kindOptions(translate)} />
           </Form.Item>
-          <Form.Item name="resourceType" label={translate('composer.resource_type.label')} rules={[{ required: true, message: translate('composer.resource_type.required') }]}>
-            <ChoiceCards options={resourceTypeOptions(translate)} />
-          </Form.Item>
-          {/* Offers and requests don't share exchange classes, so wait for "Je souhaite…". */}
-          {kind && (
-            <Form.Item name="exchangeType" label={translate('composer.exchange_type.label')} rules={[{ required: true, message: translate('composer.exchange_type.required') }]}>
+          {/* Only offers and requests are about a resource; nothing to ask until one is picked. */}
+          {(kind === 'offer' || kind === 'request') && (
+            <Form.Item name="resourceType" label={translate('composer.resource_type.label')} rules={[{ required: true, message: translate('composer.resource_type.required') }]}>
+              <ChoiceCards options={resourceTypeOptions(translate)} />
+            </Form.Item>
+          )}
+          {/* Offers and requests don't share exchange classes, and loan doesn't apply to skills,
+              so wait for both choices above. Optional: clicking the selected card unselects it. */}
+          {(kind === 'offer' || kind === 'request') && resourceType && (
+            <Form.Item name="exchangeType" label={translate('composer.exchange_type.label')}>
               <ChoiceCards
+                allowDeselect
+                // Up to 4 choices: narrower cards so they fit on a single line on desktop.
+                minCardWidth={120}
                 options={exchangeTypesFor(kind, resourceType).map(t => ({
                   value: t.value,
                   title: translate(`exchange_types.${t.key}.label`),
@@ -497,7 +529,15 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         </div>
         <div style={{ display: step === 'details' ? 'block' : 'none' }}>
           <Form.Item name="title" label={translate('composer.title.label')} rules={[{ required: true, message: translate('composer.title.required') }]}>
-            <Input placeholder={translate(exchangeTypeDef(exchangeType) ? `exchange_types.${exchangeTypeDef(exchangeType)!.key}.example` : 'composer.title.placeholder')} />
+            <Input
+              placeholder={translate(
+                kind === 'announcement'
+                  ? 'composer.title.placeholder_announcement'
+                  : exchangeTypeDef(exchangeType)
+                    ? `exchange_types.${exchangeTypeDef(exchangeType)!.key}.example`
+                    : 'composer.title.placeholder'
+              )}
+            />
           </Form.Item>
           <Form.Item name="content" label={translate('composer.content.label')} rules={[{ required: true, message: translate('composer.content.required') }]} style={{ marginBottom: 16 }}>
             <Input.TextArea rows={5} placeholder={translate(CONTENT_PLACEHOLDER_KEY[kind ?? 'offer'])} />

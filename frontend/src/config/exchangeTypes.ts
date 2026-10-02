@@ -24,7 +24,9 @@ export const EXCHANGE_TYPES: Record<AnnonceKind, ExchangeTypeDef[]> = {
     { value: 'maid:BarterRequest', key: 'barter_request' },
     { value: 'maid:PurchaseRequest', key: 'purchase_request' },
     { value: 'maid:LoanRequest', key: 'loan_request', notForHuman: true }
-  ]
+  ],
+  // Nothing is exchanged: an announcement only shares information.
+  announcement: []
 };
 
 export const exchangeTypesFor = (kind: AnnonceKind, resourceType?: ResourceType): ExchangeTypeDef[] =>

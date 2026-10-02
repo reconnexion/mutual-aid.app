@@ -3,7 +3,7 @@ const { PodActivitiesHandlerMixin } = require('@activitypods/app');
 const { arrayOf } = require('@semapps/ldp');
 
 /**
- * Sends a push notification when an offer/request is shared (`Announce`), or replied to
+ * Sends a push notification when an offer/request/announcement is shared (`Announce`), or replied to
  * (`Create{Note, inReplyTo}`). Visibility itself (ACL grant + attaching the resource to the
  * recipient's own container, or public read for comments — see `useComments`' `AS_PUBLIC`) is
  * already handled elsewhere — this only adds the friendly notification.
@@ -78,6 +78,39 @@ module.exports = {
         }
       }
     },
+    shareAnnouncement: {
+      match: {
+        type: ACTIVITY_TYPES.ANNOUNCE,
+        object: {
+          type: 'maid:Announcement'
+        }
+      },
+      async onEmit(ctx, activity, emitterUri) {
+        if (emitterUri !== activity.object['dc:creator']) {
+          throw new Error('Only the creator has the right to share the announcement ' + activity.object.id);
+        }
+
+        for (const recipientUri of arrayOf(activity.target)) {
+          await ctx.call('pod-notifications.send', {
+            template: {
+              title: {
+                en: `{{emitterProfile.vcard:given-name}} shared an announcement with you`,
+                fr: `{{emitterProfile.vcard:given-name}} vous a partagé une annonce`
+              },
+              actions: [
+                {
+                  caption: { en: 'View', fr: 'Voir' },
+                  link: '/annonces/announcement/{{encodeUri activity.object.id}}'
+                }
+              ]
+            },
+            activity,
+            context: activity.object.id,
+            recipientUri
+          });
+        }
+      }
+    },
     comment: {
       match: {
         type: ACTIVITY_TYPES.CREATE,
@@ -98,7 +131,8 @@ module.exports = {
         });
         if (!ok) return;
 
-        const kind = arrayOf(annonce.type).includes('maid:Request') ? 'request' : 'offer';
+        const types = arrayOf(annonce.type);
+        const kind = types.includes('maid:Request') ? 'request' : types.includes('maid:Announcement') ? 'announcement' : 'offer';
         const annonceTitle = annonce.name || '';
 
         await ctx.call('pod-notifications.send', {

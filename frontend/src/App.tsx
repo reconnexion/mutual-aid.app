@@ -30,7 +30,7 @@ const App = () => (
           dataProvider={dataProvider}
           routerProvider={routerProvider}
           i18nProvider={i18nProvider}
-          resources={[{ name: 'offer' }, { name: 'request' }, { name: 'profile' }]}
+          resources={[{ name: 'offer' }, { name: 'request' }, { name: 'announcement' }, { name: 'profile' }]}
           notificationProvider={useNotificationProvider}
           options={{
             syncWithLocation: true,

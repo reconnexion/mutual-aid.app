@@ -30,6 +30,9 @@ export const dataProvider = apDataProvider({
     request: {
       shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/maid/Request')
     },
+    announcement: {
+      shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/maid/Announcement')
+    },
     profile: {
       shapeTreeUri: urlJoin(SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile')
     },

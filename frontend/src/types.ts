@@ -5,9 +5,10 @@ export type Identity = {
   avatar?: string;
 };
 
-/** `Offer` and `Request` are two distinct Pod containers (hence two Refine resources), but the
- *  UI treats them as one "annonce" family — this tags which one a given record came from. */
-export type AnnonceKind = 'offer' | 'request';
+/** `Offer`, `Request` and `Announcement` are distinct Pod containers (hence distinct Refine
+ *  resources), but the UI treats them as one "annonce" family — this tags which one a given
+ *  record came from. An announcement only shares information: no resource nor exchange type. */
+export type AnnonceKind = 'offer' | 'request' | 'announcement';
 
 /** Embedded `as:Place` value of `location` — not a standalone Pod resource. */
 export type PlaceRecord = {

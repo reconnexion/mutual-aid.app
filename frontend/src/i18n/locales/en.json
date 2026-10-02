@@ -42,7 +42,8 @@
   },
   "kinds": {
     "offer": "Offer",
-    "request": "Request"
+    "request": "Request",
+    "announcement": "Announcement"
   },
   "resource_types": {
     "atom": "Material",
@@ -59,7 +60,8 @@
     "request": "Requests",
     "request-atom": "Requests · Material",
     "request-human": "Requests · Skill",
-    "request-other": "Requests · Other"
+    "request-other": "Requests · Other",
+    "announcement": "Announcements"
   },
   "list": {
     "count_shared_one": "{{count}} ad shared with you",
@@ -133,7 +135,6 @@
     "heading_edit": "Edit the ad",
     "heading_share": "Share the ad",
     "next": "Next",
-    "next_recipients": "Next: recipients",
     "send": "Send",
     "save": "Save",
     "back": "Back",
@@ -146,12 +147,13 @@
     "deleted": "Ad deleted",
     "kind": {
       "label": "I want to…",
-      "required": "Say whether you are offering or requesting something",
-      "locked": "Cannot be changed once the ad is published.",
+      "required": "Say whether you are offering, requesting or announcing something",
       "offer": "Offer",
       "offer_description": "I'm offering something to my network",
       "request": "Request",
-      "request_description": "I'm looking for something"
+      "request_description": "I'm looking for something",
+      "announcement": "Announce",
+      "announcement_description": "I'm sharing some information"
     },
     "resource_type": {
       "label": "It is…",
@@ -161,39 +163,44 @@
       "other_description": "Accommodation, carpooling…"
     },
     "exchange_type": {
-      "label": "Exchange type",
-      "required": "Choose an exchange type"
+      "label": "Exchange type (optional)"
     },
     "title": {
       "label": "Title",
       "required": "Give your ad a title",
-      "placeholder": "E.g. Gardening tools, guitar lessons, carpooling…"
+      "placeholder": "E.g. Gardening tools, guitar lessons, carpooling…",
+      "placeholder_announcement": "E.g. Street party on Saturday, farmers' market…"
     },
     "content": {
       "label": "Your ad",
       "required": "Describe your ad",
       "placeholder_offer": "Hi, I'm offering…",
-      "placeholder_request": "Hi, I'm looking for…"
+      "placeholder_request": "Hi, I'm looking for…",
+      "placeholder_announcement": "Hello, I wanted to let you know that…"
     },
     "images": "Photos (max 10)",
+    "options": "Options",
     "geolocated": {
-      "label": "Geolocated ad",
-      "help": "A geolocated ad is tied to an address and a sharing radius: only people located within that area can see it. Ideal for items to pick up or a hand on site. Turn it off if your ad is for your whole network, wherever they are.",
-      "yes": "Yes",
-      "no": "No"
+      "label": "Limit the geographic reach of the ad",
+      "help": "Your ad is then only visible to people within a radius around the starting point. Ideal for things to pick up or help on site. Leave unchecked if it's meant for your whole network, wherever they are."
     },
     "locality": {
-      "label": "Locality",
-      "required": "Enter a locality"
+      "label": "Starting point",
+      "required": "Enter a starting point"
     },
     "radius": {
       "label": "Sharing radius",
       "help": "People located beyond this radius will not see your ad."
     },
+    "limited_duration": {
+      "label": "Limit the duration of the ad",
+      "help": "Without a limit, your ad stays visible until you delete it."
+    },
     "expiry": {
-      "label": "Expires in (days)",
+      "label": "Expires in",
       "help": "After this delay, your ad disappears from your contacts' feed. It stays in \"My ads\", where you can extend it.",
-      "required": "Enter a duration"
+      "required": "Enter a duration",
+      "days": "days"
     }
   },
   "exchange_types": {
@@ -229,7 +236,7 @@
     },
     "purchase_request": {
       "label": "Purchase",
-      "description": "I'll pay (euros or Ğ1)",
+      "description": "I can pay (euros or Ğ1)",
       "example": "E.g. I'm buying a second-hand drill"
     },
     "loan_request": {

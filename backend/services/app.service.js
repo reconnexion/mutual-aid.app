@@ -33,6 +33,13 @@ module.exports = {
           accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
         },
         {
+          // Information shared with one's network, with nothing offered or requested in return.
+          // A type of our own rather than an Offer/Request flavour, so that other apps reading
+          // those containers don't mistake it for one.
+          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/maid/Announcement'),
+          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+        },
+        {
           // Read-only: used to display the author's name/avatar on ads and comments.
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile'),
           accessMode: 'acl:Read'

@@ -1,4 +1,5 @@
-import { isExpired, resourceTypeCurie } from '../utils/ontology';
+import { isExpired } from '../utils/ontology';
+import { resourceTypeOf as resourceTypeOfKind } from '../components/AnnonceCard';
 import type { Annonce } from '../hooks/useAnnonces';
 
 export type FilterId =
@@ -11,7 +12,8 @@ export type FilterId =
   | 'request'
   | 'request-atom'
   | 'request-human'
-  | 'request-other';
+  | 'request-other'
+  | 'announcement';
 
 /** Translation key of a filter's page title ("Toutes les petites annonces", "Offres · Matériel"…). */
 export const filterTitleKey = (id: FilterId) => `filters.${id}`;
@@ -29,11 +31,11 @@ export const FILTER_ROWS: { id: FilterId; labelKey: string; bold?: boolean; inde
   { id: 'request', labelKey: filterTitleKey('request'), bold: true },
   { id: 'request-atom', labelKey: 'resource_types.atom', indent: true },
   { id: 'request-human', labelKey: 'resource_types.human', indent: true },
-  { id: 'request-other', labelKey: 'resource_types.other', indent: true }
+  { id: 'request-other', labelKey: 'resource_types.other', indent: true },
+  { id: 'announcement', labelKey: filterTitleKey('announcement'), bold: true }
 ];
 
-const resourceTypeOf = (annonce: Annonce) =>
-  resourceTypeCurie(annonce.kind === 'offer' ? annonce['maid:offerOfResourceType'] : annonce['maid:requestOfResourceType']);
+const resourceTypeOf = (annonce: Annonce) => resourceTypeOfKind(annonce, annonce.kind);
 
 /** Used both for the feed itself and for the sidebar counts (`AppShell`), so the two stay
  *  consistent. Expired ads are hidden from every filter except "Mes petites annonces", where the
@@ -61,6 +63,8 @@ export const matchesFilter = (annonce: Annonce, filter: FilterId, ownWebId?: str
       return annonce.kind === 'request' && resourceTypeOf(annonce) === 'pair:HumanBasedResource';
     case 'request-other':
       return annonce.kind === 'request' && resourceTypeOf(annonce) === 'pair:Resource';
+    case 'announcement':
+      return annonce.kind === 'announcement';
     default:
       return true;
   }
