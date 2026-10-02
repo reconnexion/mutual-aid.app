@@ -37,7 +37,9 @@ const AddLocationModal = ({ open, onClose, onCreated }: Props) => {
             'vcard:longitude': values.address.longitude
           }
         }
-      }
+      },
+      // The new address showing up selected in the composer's dropdown is feedback enough.
+      successNotification: false
     });
     form.resetFields();
     onCreated(data.id as string);

@@ -22,8 +22,13 @@ export const i18nProvider: I18nProvider = {
   // Refine calls `translate(key, options, defaultMessage)` for its own built-in strings (and so
   // does `AntdAuthPage`) — forwarding the third argument as i18next's `defaultValue` means a key
   // we haven't translated falls back to that English default rather than rendering the raw key.
+  // Refine also uses a `translate(key, defaultMessage)` shorthand (e.g. `translate('offer.offer',
+  // 'offer')` for a resource's name in notifications), where the second argument is the default
+  // message itself, not an options object — spreading that string gave "offer.offer".
   translate: (key: string, options?: any, defaultMessage?: string) =>
-    i18next.t(key, { ...options, defaultValue: defaultMessage }) as string,
+    typeof options === 'string'
+      ? (i18next.t(key, { defaultValue: options }) as string)
+      : (i18next.t(key, { ...options, defaultValue: defaultMessage }) as string),
   changeLocale: (lang: string) => i18next.changeLanguage(lang),
   getLocale: () => i18next.language
 };

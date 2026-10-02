@@ -1,18 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { App, Button, Checkbox, Form, Input, InputNumber, Modal, Popconfirm, Slider, Space, Tooltip } from 'antd';
-import {
-  AppstoreOutlined,
-  BulbOutlined,
-  ClockCircleOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  GiftOutlined,
-  QuestionCircleOutlined,
-  ShoppingOutlined,
-  SwapOutlined,
-  TagOutlined,
-  ToolOutlined
-} from '@ant-design/icons';
+import { CloseOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useTranslate, useUpdate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
@@ -25,7 +13,7 @@ import useIsMobile from '../hooks/useIsMobile';
 import useOutbox from '../hooks/useOutbox';
 import { exchangeTypeCurie, imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
 import { exchangeTypeDef, exchangeTypesFor } from '../config/exchangeTypes';
-import { KIND_ICON } from '../config/kinds';
+import { EXCHANGE_ICON, KIND_ICON, RESOURCE_TYPE_ICON } from '../config/icons';
 import { geoPoint } from '../utils/geo';
 import type { AnnonceKind, AnnonceRecord, ExchangeType, Identity, InvitationState, LocationRecord, ResourceType } from '../types';
 
@@ -64,22 +52,11 @@ const kindOptions = (t: Translate): ChoiceOption<AnnonceKind>[] => [
 ];
 
 const resourceTypeOptions = (t: Translate): ChoiceOption<ResourceType>[] => [
-  { value: 'pair:AtomBasedResource', title: t('resource_types.atom'), description: t('composer.resource_type.atom_description'), icon: <ToolOutlined /> },
-  { value: 'pair:HumanBasedResource', title: t('resource_types.human'), description: t('composer.resource_type.human_description'), icon: <BulbOutlined /> },
-  { value: 'pair:Resource', title: t('resource_types.other'), description: t('composer.resource_type.other_description'), icon: <AppstoreOutlined /> }
+  { value: 'pair:AtomBasedResource', title: t('resource_types.atom'), description: t('composer.resource_type.atom_description'), icon: RESOURCE_TYPE_ICON['pair:AtomBasedResource'] },
+  { value: 'pair:HumanBasedResource', title: t('resource_types.human'), description: t('composer.resource_type.human_description'), icon: RESOURCE_TYPE_ICON['pair:HumanBasedResource'] },
+  { value: 'pair:Resource', title: t('resource_types.other'), description: t('composer.resource_type.other_description'), icon: RESOURCE_TYPE_ICON['pair:Resource'] }
 ];
 
-const EXCHANGE_ICON: Record<ExchangeType, ReactNode> = {
-  'maid:GiftOffer': <GiftOutlined />,
-  'maid:BarterOffer': <SwapOutlined />,
-  // A price tag rather than a currency sign: sales can be paid in euros or in Ğ1.
-  'maid:SaleOffer': <TagOutlined />,
-  'maid:LoanOffer': <ClockCircleOutlined />,
-  'maid:GiftRequest': <GiftOutlined />,
-  'maid:BarterRequest': <SwapOutlined />,
-  'maid:PurchaseRequest': <ShoppingOutlined />,
-  'maid:LoanRequest': <ClockCircleOutlined />
-};
 
 // The "Titre" placeholder comes from the chosen exchange type (see `exchangeTypes.ts`), or is
 // specific to announcements; the body's only depends on the kind.

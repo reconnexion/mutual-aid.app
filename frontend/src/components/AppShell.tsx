@@ -13,7 +13,7 @@ import useAnnonces from '../hooks/useAnnonces';
 import useIsMobile from '../hooks/useIsMobile';
 import useOwnActor from '../hooks/useOwnActor';
 import { FILTER_ROWS, matchesFilter, type FilterId } from '../config/filters';
-import { FILTER_ICON } from '../config/kinds';
+import { FILTER_ICON } from '../config/icons';
 import { APP_NAME, DONATION_URL } from '../config/env';
 import { authProvider } from '../providers';
 import { HEADER_HEIGHT } from '../config/layout';

@@ -1,5 +1,4 @@
-import { isExpired } from '../utils/ontology';
-import { resourceTypeOf as resourceTypeOfKind } from '../components/AnnonceCard';
+import { isExpired, resourceTypeCurie } from '../utils/ontology';
 import type { Annonce } from '../hooks/useAnnonces';
 
 export type FilterId =
@@ -35,7 +34,13 @@ export const FILTER_ROWS: { id: FilterId; labelKey: string; bold?: boolean; inde
   { id: 'announcement', labelKey: filterTitleKey('announcement'), bold: true }
 ];
 
-const resourceTypeOf = (annonce: Annonce) => resourceTypeOfKind(annonce, annonce.kind);
+/** `undefined` for announcements, which aren't about a resource. */
+const resourceTypeOf = (annonce: Annonce) =>
+  annonce.kind === 'offer'
+    ? resourceTypeCurie(annonce['maid:offerOfResourceType'])
+    : annonce.kind === 'request'
+      ? resourceTypeCurie(annonce['maid:requestOfResourceType'])
+      : undefined;
 
 /** Used both for the feed itself and for the sidebar counts (`AppShell`), so the two stay
  *  consistent. Expired ads are hidden from every filter except "Mes petites annonces", where the

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Alert, Avatar, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useTranslate } from '@refinedev/core';
@@ -13,6 +14,8 @@ const { Text } = Typography;
 /** A comment bubble — right-aligned (light blue) for everyone except the ad's own creator, whose
  *  replies appear left-aligned (white, like the ad itself) to stand out as "the owner's word". */
 const Comment = ({ reply, fromOwner }: { reply: ReplyRecord; fromOwner: boolean }) => {
+  // Set on comments posted from this page and not yet confirmed by the outbox (see `useComments`).
+  const sending = !!reply.sending;
   const translate = useTranslate();
   const { data: author } = useActorProfile(reply.attributedTo);
   const profileUrl = useProfileUrl();
@@ -28,7 +31,9 @@ const Comment = ({ reply, fromOwner }: { reply: ReplyRecord; fromOwner: boolean 
         padding: '8px 12px',
         display: 'flex',
         flexDirection: 'column',
-        gap: 2
+        gap: 2,
+        opacity: sending ? 0.6 : 1,
+        transition: 'opacity 0.2s'
       }}
     >
       <a href={reply.attributedTo && profileUrl(reply.attributedTo)} target="_blank" rel="noopener noreferrer">
@@ -38,7 +43,7 @@ const Comment = ({ reply, fromOwner }: { reply: ReplyRecord; fromOwner: boolean 
       </a>
       <div style={{ whiteSpace: 'pre-wrap' }}>{reply.content}</div>
       <Text type="secondary" style={{ fontSize: 11, alignSelf: 'flex-end' }}>
-        {reply['dc:created'] ? dayjs(reply['dc:created']).fromNow() : ''}
+        {sending ? translate('comments.sending') : reply['dc:created'] ? dayjs(reply['dc:created']).fromNow() : ''}
       </Text>
     </div>
   );
@@ -71,12 +76,21 @@ type Props = {
  *  reply-posting logic, rendered separately in the page's fixed bottom bar). */
 const CommentList = ({ replies, isLoading, annonceCreator }: Props) => {
   const translate = useTranslate();
+  const endRef = useRef<HTMLDivElement>(null);
+  const pendingCount = replies.filter(r => r.id.startsWith('pending:')).length;
+
+  // Bring a comment just posted into view, in case the list is longer than the screen.
+  useEffect(() => {
+    if (pendingCount > 0) endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [pendingCount]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {!isLoading && replies.length === 0 && <Alert type="info" message={translate('comments.empty')} showIcon />}
       {replies.map(reply => (
         <Comment key={reply.id} reply={reply} fromOwner={reply.attributedTo === annonceCreator} />
       ))}
+      <div ref={endRef} />
     </div>
   );
 };

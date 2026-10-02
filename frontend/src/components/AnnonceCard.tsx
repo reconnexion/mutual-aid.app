@@ -11,27 +11,12 @@ import useActivityCollection from '../hooks/useActivityCollection';
 import useProfileUrl from '../hooks/useProfileUrl';
 import { formatUsername } from '../utils/formatUsername';
 import { AVATAR_SIZE } from '../config/layout';
-import { exchangeTypeCurie, imagesOf, isExpired, literalValue, resourceTypeCurie } from '../utils/ontology';
+import { exchangeTypeCurie, imagesOf, isExpired, literalValue } from '../utils/ontology';
 import { exchangeTypeLabelKey } from '../config/exchangeTypes';
+import { EXCHANGE_ICON, KIND_ICON } from '../config/icons';
 import type { AnnonceKind, AnnonceRecord } from '../types';
 
 const { Paragraph, Text } = Typography;
-
-export const CAT_COLOR: Record<AnnonceKind, string> = { offer: 'green', request: 'blue', announcement: 'volcano' };
-
-/** `undefined` for announcements, which aren't about a resource. */
-export const resourceTypeOf = (annonce: AnnonceRecord, kind: AnnonceKind) =>
-  kind === 'offer'
-    ? resourceTypeCurie(annonce['maid:offerOfResourceType'])
-    : kind === 'request'
-      ? resourceTypeCurie(annonce['maid:requestOfResourceType'])
-      : undefined;
-
-export const SUB_LABEL_KEY: Record<string, string> = {
-  'pair:AtomBasedResource': 'resource_types.atom',
-  'pair:HumanBasedResource': 'resource_types.human',
-  'pair:Resource': 'resource_types.other'
-};
 
 type Translate = (key: string, options?: any) => string;
 
@@ -61,8 +46,10 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
   const profileUrl = useProfileUrl();
   const place = annonce.location;
   const images = imagesOf(annonce['pair:depictedBy']);
-  const resourceType = resourceTypeOf(annonce, kind);
-  const exchangeLabelKey = exchangeTypeLabelKey(exchangeTypeCurie(annonce['pair:hasType']));
+  // A single tag: the exchange type when there is one ("Vente"), else the kind ("Offre"). The
+  // category (Matériel…) is left out: reading the ad makes it obvious.
+  const exchangeType = exchangeTypeCurie(annonce['pair:hasType']);
+  const exchangeLabelKey = kind !== 'announcement' ? exchangeTypeLabelKey(exchangeType) : undefined;
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
 
   return (
@@ -90,13 +77,13 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
           </div>
           <Space size={8} wrap style={{ marginBottom: 8, display: 'flex' }}>
             {annonce.name && (
-              <Text strong style={{ fontSize: 15 }}>
+              <Text strong style={{ fontSize: 17 }}>
                 {annonce.name}
               </Text>
             )}
-            <Tag color={CAT_COLOR[kind]}>{translate(`kinds.${kind}`)}</Tag>
-            {resourceType && <Tag color="geekblue">{SUB_LABEL_KEY[resourceType] ? translate(SUB_LABEL_KEY[resourceType]) : resourceType}</Tag>}
-            {exchangeLabelKey && <Tag color="gold">{translate(exchangeLabelKey)}</Tag>}
+            <Tag icon={exchangeType && exchangeLabelKey ? EXCHANGE_ICON[exchangeType] : KIND_ICON[kind]} style={{ marginInlineEnd: 0 }}>
+              {translate(exchangeLabelKey ?? `kinds.${kind}`)}
+            </Tag>
           </Space>
           <Link to={detailUrl} style={{ color: 'inherit' }}>
             <Paragraph ellipsis={showFooter ? { rows: 3 } : false} style={{ whiteSpace: 'pre-wrap', marginBottom: images.length ? 12 : 8 }}>

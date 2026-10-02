@@ -43,7 +43,7 @@ const AnnonceShowPage = () => {
     queryOptions: { enabled: !!kind && !!id }
   });
   const { data: author } = useActorProfile(annonce?.['dc:creator']);
-  const { replies, isLoading: repliesLoading, sending, send } = useComments(annonce || ({} as AnnonceRecord));
+  const { replies, isLoading: repliesLoading, send } = useComments(annonce || ({} as AnnonceRecord));
   const { items: announcers, isSuccess: announcersLoaded } = useActivityCollection<string>(annonce?.['apods:announcers']);
   const mine = !!annonce && annonce['dc:creator'] === identity?.id;
   const canShare = mine || (announcersLoaded && !!identity && announcers.includes(identity.id));
@@ -54,7 +54,8 @@ const AnnonceShowPage = () => {
   const submitComment = async () => {
     const content = draft;
     setDraft('');
-    await send(content);
+    // The comment shows up straight away (see `useComments`); give the text back if it failed.
+    if (!(await send(content))) setDraft(content);
     // The very first comment attaches a brand new `as:replies` collection to the annonce itself
     // — refetch it too (not just the collection), or its URI never reaches this page's state.
     if (!annonce.replies) retryRefresh(() => query.refetch());
@@ -117,7 +118,7 @@ const AnnonceShowPage = () => {
             placeholder={translate('show.comment_placeholder')}
             style={{ borderRadius: 21, height: 42, fontSize: 14, paddingLeft: 16 }}
           />
-          <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={submitComment} loading={sending} style={{ width: 42, height: 42 }} />
+          <Button type="primary" shape="circle" size="large" icon={<SendOutlined />} onClick={submitComment} style={{ width: 42, height: 42 }} />
         </div>
       </div>
 

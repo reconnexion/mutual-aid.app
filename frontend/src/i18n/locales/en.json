@@ -95,7 +95,8 @@
     "more_other": "+{{count}} photos"
   },
   "comments": {
-    "empty": "No comments yet"
+    "empty": "No comments yet",
+    "sending": "Sending…"
   },
   "poster": {
     "member_since": "Member since {{date}}",
