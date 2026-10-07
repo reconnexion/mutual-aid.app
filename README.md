@@ -54,6 +54,8 @@ yarn install
 yarn run dev
 ```
 
+The backend targets an ActivityPods **2.3** Pod provider (`next` branch): `@activitypods/app` must be 2.3.x and `@semapps/*` 1.2.x. The 2.2/1.1 releases still expect the `interop:DataGrant`s that 2.3 removed — with them, the app's registration silently fails on the backend side (`One or more required access needs have not been granted` in the Bull queue), no inbox/outbox listener gets created, and the frontend shows "The app is not listening to …". When linking the local framework (see [below](#linking-to-semappsactivitypods-packages-optional)), note it is TypeScript, hence `yarn run dev` going through `tsx`.
+
 This will bootstrap the server and, if there are no errors, finish with a message telling you that Moleculer's ServiceBroker has started.
 
 You can see the application details at http://localhost:3001/app
@@ -103,6 +105,22 @@ yarn run link-packages
 Additionally, frontend packages need to be rebuilt on every changes, or they will not be taken into account by ActivityPods. You can use `yarn run build` to build a package once, or `yarn run watch` to rebuild a package on every change. On every build, the new package will be published to Yalc.
 
 Thanks to Git hooks, the frontend packages will also be published to Yalc whenever git branches are changed.
+
+## Dev environment and pull request previews (Coolify)
+
+The dev instance and one preview per pull request are built and run by [Coolify](https://coolify.io) directly from this repository, using [`docker-compose.coolify.yml`](./docker-compose.coolify.yml) and the Dockerfiles in [`/docker`](./docker). No image is built by GitHub Actions for them (the workflow only builds the release images on `v*` tags).
+
+How it is wired in Coolify:
+
+- One **application** (build pack _Docker Compose_, compose file `/docker-compose.coolify.yml`) follows the `next` branch and serves [dev.lentraide.app](https://dev.lentraide.app): every push on `next` rebuilds and redeploys it.
+- **Preview deployments** are enabled on that application: opening or updating a pull request targeting `next` builds a separate stack on its own domain (`lentraide-pr-<n>.dev.reconnexion.coop`, see the _Preview URL Template_ of the application), and closing or merging the PR removes it. The GitHub App adds a comment with the preview link on each PR. Only pull requests targeting the branch the application follows get a preview, and only when their author is a **direct** collaborator of the repository (Coolify ignores PRs from other authors, including members who only have access through the organization, unless _public_ preview deployments are enabled, which we do not want on a public repository).
+- The stacks share the Fuseki of the `shared-infra` service but each one uses its own datasets, named after the stack by default (`<DATASET_PREFIX>-backend-pr-<n>` for the previews); the dev instance keeps its historical `lentraide-dev` / `settings-lentraide-dev` datasets through the `MAIN_DATASET` / `SETTINGS_DATASET` variables, set in the production scope only. Each stack also has its own Redis. Only the backend joins the shared `coolify` network.
+- The frontend URLs are inlined by Vite at build time, so the compose file passes the domain Coolify generated for the stack (`SERVICE_FQDN_*`) as build arguments. The variables to set in Coolify (`APP_NAME`, `SPARQL_ENDPOINT`, `JENA_PASSWORD`, `MAPBOX_ACCESS_TOKEN`...) are listed at the top of the compose file; they must be set for both the production and the preview scopes.
+- The backend registers its own actor (`/api/app`) in its settings dataset on the first boot, with the domain it had at that time. Set the domains of the application in Coolify **before** the first deployment; if they change later, delete the `<prefix>-backend` and `settings-<prefix>-backend` datasets in Fuseki and redeploy, otherwise the backend refuses to start (`Remote resource ... cannot be modified`).
+
+Closing a PR removes its containers but not its Fuseki datasets: a nightly cron on the Coolify server (`cleanup-preview-datasets.sh` in the `shared-infra` repository) removes the `*-pr-<n>` datasets no container declares any more.
+
+The builds run on the Coolify server: the frontend image caps the Node heap (`NODE_OPTIONS` in `docker/frontend.dockerfile`) so that a build cannot starve the other containers, Fuseki in particular.
 
 ## Deploy to production
 
@@ -157,6 +175,8 @@ LETSENCRYPT_EMAIL=
 FUSEKI_PASSWORD=
 MAPBOX_ACCESS_TOKEN=
 POD_PROVIDER_BASE_URL=  # If you want to enforce a Pod provider for this app
+PORTEJUNES_URL=  # If set, shows an "Envoyer des Ğ1" button on ad posters' profiles
+DONATION_URL=  # If set, shows a "Soutenir cette application" link at the bottom of the sidebar
 ```
 
 If you want to customize more thoroughly the app, you can do the same with the `.env.production` files in the /backend and /frontend directories (copy them to a `.env.production.local` file). Note all env files ending with `.local` are not commited.

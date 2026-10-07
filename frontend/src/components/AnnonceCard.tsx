@@ -1,0 +1,145 @@
+import { Avatar, Button, Space, Tag, Typography } from 'antd';
+import { CommentOutlined, UserOutlined } from '@ant-design/icons';
+import { Link } from 'react-router';
+import { useTranslate } from '@refinedev/core';
+import dayjs from 'dayjs';
+
+import ImageGallery from './ImageGallery';
+import MarkdownContent from './MarkdownContent';
+import LikeButton from './LikeButton';
+import useActorProfile from '../hooks/useActorProfile';
+import useActivityCollection from '../hooks/useActivityCollection';
+import useProfileUrl from '../hooks/useProfileUrl';
+import { formatUsername } from '../utils/formatUsername';
+import { AVATAR_SIZE } from '../config/layout';
+import { exchangeTypeCurie, expirationDateOf, imagesOf, isExpired } from '../utils/ontology';
+import { collectionUriOf } from '../utils/collections';
+import { exchangeTypeLabelKey } from '../config/exchangeTypes';
+import { EXCHANGE_ICON, KIND_ICON } from '../config/icons';
+import type { AnnonceKind, AnnonceRecord } from '../types';
+
+const { Text } = Typography;
+
+type Translate = (key: string, options?: any) => string;
+
+export const expiryLabel = (annonce: AnnonceRecord, translate: Translate) => {
+  const expirationDate = expirationDateOf(annonce);
+  if (!expirationDate) return translate('card.no_expiry');
+  // Same test as the feed's masking, so an ad is never both listed and labelled "Expirée".
+  if (isExpired(annonce)) return translate('card.expired');
+  const days = dayjs(expirationDate).diff(dayjs(), 'day');
+  if (days === 0) return translate('card.expires_today');
+  return translate('card.expires_in', { count: days });
+};
+
+type Props = {
+  annonce: AnnonceRecord;
+  kind: AnnonceKind;
+  showFooter?: boolean;
+  /** Only the first lines of the text, linking to the detail page (the feed). Off on the detail page. */
+  truncate?: boolean;
+};
+
+/** A chat-bubble-style card, matching the mockup: the avatar sits beside the bubble (not inside
+ *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message.
+ *  "Modifier"/"Partager" live only in the detail page's header — not worth repeating here. */
+const AnnonceCard = ({ annonce, kind, showFooter = true, truncate = true }: Props) => {
+  const translate = useTranslate();
+  const { data: author } = useActorProfile(annonce['dc:creator']);
+  const { items: replies } = useActivityCollection(collectionUriOf(annonce, 'replies'));
+  const profileUrl = useProfileUrl();
+  const place = annonce.location;
+  const images = imagesOf(annonce['pair:depictedBy']);
+  // A single tag: the exchange type when there is one ("Vente"), else the kind ("Offre"). The
+  // category (Matériel…) is left out: reading the ad makes it obvious.
+  const exchangeType = exchangeTypeCurie(annonce['pair:hasType']);
+  const exchangeLabelKey = kind !== 'announcement' ? exchangeTypeLabelKey(exchangeType) : undefined;
+  const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
+
+  return (
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%', maxWidth: 640 }}>
+      <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} size={AVATAR_SIZE} style={{ flex: '0 0 auto' }} />
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          background: '#fff',
+          border: '1px solid #f0f0f0',
+          borderRadius: '2px 8px 8px 8px',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{ padding: '10px 14px 8px' }}>
+          <div style={{ marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
+            <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
+              <Text strong>{author?.['vcard:given-name'] || translate('app.neighbour')}</Text>
+            </a>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              {formatUsername(annonce['dc:creator'])}
+            </Text>
+          </div>
+          <Space size={8} wrap style={{ marginBottom: 8, display: 'flex' }}>
+            {annonce['pair:label'] && (
+              <Text strong style={{ fontSize: 17 }}>
+                {annonce['pair:label']}
+              </Text>
+            )}
+            <Tag icon={exchangeType && exchangeLabelKey ? EXCHANGE_ICON[exchangeType] : KIND_ICON[kind]} style={{ marginInlineEnd: 0 }}>
+              {translate(exchangeLabelKey ?? `kinds.${kind}`)}
+            </Tag>
+          </Space>
+          {truncate ? (
+            <Link to={detailUrl} style={{ color: 'inherit', display: 'block', marginBottom: images.length ? 12 : 8 }}>
+              <MarkdownContent className="app-markdown-clamp" disableLinks>
+                {annonce['pair:description']}
+              </MarkdownContent>
+            </Link>
+          ) : (
+            <MarkdownContent style={{ marginBottom: images.length ? 12 : 8 }}>{annonce['pair:description']}</MarkdownContent>
+          )}
+          {images.length > 0 && (
+            <div style={{ marginBottom: 8 }}>
+              <ImageGallery images={images} />
+            </div>
+          )}
+          <Space size={6} wrap style={{ fontSize: 11, display: 'flex' }}>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              {translate('card.posted_on', { date: annonce['dc:created'] ? dayjs(annonce['dc:created']).format(translate('card.date_format')) : '' })}
+            </Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              ·
+            </Text>
+            <Text type="secondary" style={{ fontSize: 11 }}>
+              {expiryLabel(annonce, translate)}
+            </Text>
+            {place?.name && (
+              <>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  ·
+                </Text>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {place.name}
+                  {place.radius ? ` (${place.radius} km)` : ''}
+                </Text>
+              </>
+            )}
+          </Space>
+        </div>
+
+        {showFooter && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px', borderTop: '1px solid #f0f0f0' }}>
+            <Link to={detailUrl}>
+              <Button type="text" size="small" icon={<CommentOutlined />}>
+                {replies.length > 0 ? translate('card.comments', { count: replies.length }) : translate('card.comment')}
+              </Button>
+            </Link>
+            <LikeButton annonce={annonce} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AnnonceCard;

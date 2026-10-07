@@ -1,0 +1,540 @@
+import { useEffect, useMemo, useState } from 'react';
+import { App, Button, Checkbox, Form, Input, InputNumber, Modal, Popconfirm, Slider, Space, Tooltip } from 'antd';
+import { CloseOutlined, DeleteOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { useCreate, useDelete, useGetIdentity, useInvalidate, useList, useTranslate, useUpdate } from '@refinedev/core';
+import dayjs from 'dayjs';
+
+import ChoiceCards, { type ChoiceOption } from './ChoiceCards';
+import ImageUpload from './ImageUpload';
+import LocationSelect from './LocationSelect';
+import RecipientPicker from './RecipientPicker';
+import useActivityCollection from '../hooks/useActivityCollection';
+import useIsMobile from '../hooks/useIsMobile';
+import useOutbox from '../hooks/useOutbox';
+import { exchangeTypeCurie, expirationDateOf, imagesOf, resourceTypeCurie } from '../utils/ontology';
+import { exchangeTypeDef, exchangeTypesFor } from '../config/exchangeTypes';
+import { EXCHANGE_ICON, KIND_ICON, RESOURCE_TYPE_ICON } from '../config/icons';
+import { geoPoint } from '../utils/geo';
+import type { AnnonceKind, AnnonceRecord, ExchangeType, Identity, InvitationState, LocationRecord, ResourceType } from '../types';
+
+export type ComposerMode = 'create' | 'edit' | 'share';
+
+type Props = {
+  open: boolean;
+  mode: ComposerMode;
+  /** For `edit`/`share`: derived from `annonce`. Ignored in `create` mode, where the user has to
+   *  pick explicitly (nothing is preselected — see `KIND_OPTIONS`). */
+  kind: AnnonceKind;
+  annonce?: AnnonceRecord;
+  /** Pre-fills "Titre" in `create` mode — e.g. text already typed into the list page's
+   *  bottom bar before the dialog was opened. */
+  initialTitle?: string;
+  onClose: () => void;
+  onSaved?: () => void;
+};
+
+/** Announcements aren't about a resource, so they have neither this nor an exchange type. */
+const RESOURCE_TYPE_PREDICATE: Record<AnnonceKind, string | undefined> = {
+  offer: 'maid:offerOfResourceType',
+  request: 'maid:requestOfResourceType',
+  announcement: undefined
+};
+
+type Translate = (key: string, options?: any) => string;
+
+// Neither choice has a default: preselecting "Offre" + "Matériel" made the two rows look like
+// tabs rather than a decision, and ads ended up in the wrong category. The descriptions are what
+// actually explain the taxonomy (offer/request × pair:AtomBasedResource/HumanBasedResource/Resource).
+const kindOptions = (t: Translate): ChoiceOption<AnnonceKind>[] => [
+  { value: 'offer', title: t('composer.kind.offer'), description: t('composer.kind.offer_description'), icon: KIND_ICON.offer },
+  { value: 'request', title: t('composer.kind.request'), description: t('composer.kind.request_description'), icon: KIND_ICON.request },
+  { value: 'announcement', title: t('composer.kind.announcement'), description: t('composer.kind.announcement_description'), icon: KIND_ICON.announcement }
+];
+
+const resourceTypeOptions = (t: Translate): ChoiceOption<ResourceType>[] => [
+  { value: 'pair:AtomBasedResource', title: t('resource_types.atom'), description: t('composer.resource_type.atom_description'), icon: RESOURCE_TYPE_ICON['pair:AtomBasedResource'] },
+  { value: 'pair:HumanBasedResource', title: t('resource_types.human'), description: t('composer.resource_type.human_description'), icon: RESOURCE_TYPE_ICON['pair:HumanBasedResource'] },
+  { value: 'pair:Resource', title: t('resource_types.other'), description: t('composer.resource_type.other_description'), icon: RESOURCE_TYPE_ICON['pair:Resource'] }
+];
+
+
+// The "Titre" placeholder comes from the chosen exchange type (see `exchangeTypes.ts`), or is
+// specific to announcements; the body's only depends on the kind.
+const CONTENT_PLACEHOLDER_KEY: Record<AnnonceKind, string> = {
+  offer: 'composer.content.placeholder_offer',
+  request: 'composer.content.placeholder_request',
+  announcement: 'composer.content.placeholder_announcement'
+};
+
+/** Pages of the dialog. `create` walks through all four; `edit` skips the type page (it can't
+ *  change after publication — the fields stay mounted, so their values are still saved), folds
+ *  "Diffusion" (geolocation + expiry) into the details page — the explanatory text there is for
+ *  first-timers — and skips the recipients (that's what `share` is for); `share` shows only them. The form pages stay
+ *  mounted (hidden with `display: none`) so values survive going back and forth. */
+type Step = 'type' | 'details' | 'distribution' | 'recipients';
+const STEPS: Record<ComposerMode, Step[]> = {
+  create: ['type', 'details', 'distribution', 'recipients'],
+  edit: ['details'],
+  share: ['recipients']
+};
+const STEP_FIELDS: Record<Step, (keyof FormValues)[]> = {
+  type: ['kind', 'resourceType', 'exchangeType'],
+  details: ['title', 'content', 'images'],
+  distribution: ['geolocated', 'locationId', 'radius', 'limitedDuration', 'expiryDays'],
+  recipients: []
+};
+
+type FormValues = {
+  kind: AnnonceKind;
+  exchangeType: ExchangeType;
+  title: string;
+  content: string;
+  resourceType: ResourceType;
+  /** Off = no `location` on the ad at all (the "Point de départ"/"Rayon" fields are hidden). */
+  geolocated: boolean;
+  locationId?: string;
+  radius: number;
+  /** Off = no `maid:hasTimeCondition/maid:expirationDate`: the ad stays until deleted ("Expire dans" is hidden). */
+  limitedDuration: boolean;
+  expiryDays: number;
+  images?: string[];
+};
+
+const asPlace = (location: LocationRecord, radius: number) => ({
+  type: 'Place',
+  name: location['vcard:given-name'],
+  latitude: location['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:latitude'],
+  longitude: location['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:longitude'],
+  radius
+});
+
+/** Ad composer, matching the mockup: `create` is 2 steps (content, then who to share it with);
+ *  `edit` and `share` are each a single step (either just the content, or just the recipients). */
+/** A field label with an (i) tooltip — keeps the "Diffusion" page compact while still explaining
+ *  each setting. */
+const LabelWithHelp = ({ label, help }: { label: string; help: string }) => (
+  <Space size={4}>
+    {label}
+    <Tooltip title={help}>
+      <QuestionCircleOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
+    </Tooltip>
+  </Space>
+);
+
+/** An opt-in setting of the "Diffusion" page: a checkbox, with its (i) tooltip kept outside the
+ *  checkbox's label so that hovering/tapping it doesn't toggle the option. */
+const OptionCheckbox = ({ name, label, help }: { name: keyof FormValues; label: string; help: string }) => (
+  <Form.Item style={{ marginBottom: 12 }}>
+    <Space size={4}>
+      <Form.Item name={name} valuePropName="checked" noStyle>
+        <Checkbox>{label}</Checkbox>
+      </Form.Item>
+      <Tooltip title={help}>
+        <QuestionCircleOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
+      </Tooltip>
+    </Space>
+  </Form.Item>
+);
+
+const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle, onClose, onSaved }: Props) => {
+  const { message } = App.useApp();
+  const translate = useTranslate();
+  const isMobile = useIsMobile();
+  const [form] = Form.useForm<FormValues>();
+  // Undefined in `create` mode until the user picks a card; `edit`/`share` are prefilled from the
+  // ad and can't change it (an offer can't become a request: it lives in a different container).
+  const kind: AnnonceKind | undefined = Form.useWatch('kind', form) ?? (mode === 'create' ? undefined : initialKind);
+  const resourceType: ResourceType | undefined = Form.useWatch('resourceType', form);
+  const exchangeType: ExchangeType | undefined = Form.useWatch('exchangeType', form);
+  const geolocated: boolean = Form.useWatch('geolocated', form) ?? false;
+  const limitedDuration: boolean = Form.useWatch('limitedDuration', form) ?? false;
+  const locationId: string | undefined = Form.useWatch('locationId', form);
+  const radius: number | undefined = Form.useWatch('radius', form);
+  const [stepIndex, setStepIndex] = useState(0);
+  const steps = STEPS[mode];
+  const step = steps[stepIndex];
+  const isLastStep = stepIndex === steps.length - 1;
+  const [invitations, setInvitations] = useState<Record<string, InvitationState>>({});
+  const [savedInvitations, setSavedInvitations] = useState<Record<string, InvitationState>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const { data: identity } = useGetIdentity<Identity>();
+  const { mutateAsync: createAnnonce } = useCreate();
+  const { mutateAsync: updateAnnonce } = useUpdate();
+  const { mutateAsync: deleteAnnonce } = useDelete();
+  const outbox = useOutbox();
+  const invalidate = useInvalidate();
+
+  const creatorUri = annonce?.['dc:creator'];
+  const isCreator = mode === 'create' || creatorUri === identity?.id;
+
+  const { items: alreadyShared } = useActivityCollection<string>(mode !== 'create' ? annonce?.['apods:announces'] : undefined);
+  const { items: alreadyAnnouncers } = useActivityCollection<string>(mode !== 'create' ? annonce?.['apods:announcers'] : undefined);
+  const { result: locations } = useList<LocationRecord>({ resource: 'location', pagination: { mode: 'off' } });
+
+  // Populate present invitations: anyone already in `apods:announces`/`apods:announcers` is readonly.
+  useEffect(() => {
+    if (!open) return;
+    const initial: Record<string, InvitationState> = {};
+    [...alreadyShared, ...alreadyAnnouncers].forEach(webId => {
+      const canView = alreadyShared.includes(webId);
+      const canShare = alreadyAnnouncers.includes(webId);
+      initial[webId] = { canView, canShare, viewReadonly: canView, shareReadonly: canShare };
+    });
+    setInvitations(initial);
+    setSavedInvitations(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, alreadyShared, alreadyAnnouncers]);
+
+  useEffect(() => {
+    if (!open) return;
+    setStepIndex(0);
+    if (annonce) {
+      const expirationDate = expirationDateOf(annonce);
+      const radius = annonce.location?.radius ? Number(annonce.location.radius) : 15;
+      form.setFieldsValue({
+        kind: initialKind,
+        geolocated: !!annonce.location,
+        title: annonce['pair:label'],
+        content: annonce['pair:description'],
+        resourceType: RESOURCE_TYPE_PREDICATE[initialKind] ? resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]!]) : undefined,
+        exchangeType: exchangeTypeCurie(annonce['pair:hasType']),
+        radius,
+        limitedDuration: !!expirationDate,
+        expiryDays: expirationDate ? Math.max(1, dayjs(expirationDate).diff(dayjs(), 'day')) : 30,
+        images: imagesOf(annonce['pair:depictedBy'])
+      });
+    } else {
+      form.resetFields();
+      form.setFieldsValue({ title: initialTitle, geolocated: false, radius: 15, limitedDuration: false, expiryDays: 30 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, annonce, mode, initialTitle]);
+
+  // Derives the "Point de départ" field once the saved-addresses list has loaded — separate from the
+  // reset effect above so that adding a new address mid-composing (which also changes
+  // `locations.data`) doesn't wipe fields the user has already filled in.
+  useEffect(() => {
+    if (!open || form.getFieldValue('locationId')) return;
+    if (mode === 'create') {
+      // Home address by default, else the first saved one — most users only have the one anyway.
+      const home = locations.data.find(l => l['vcard:TYPE'] === 'home') ?? locations.data[0];
+      if (home) form.setFieldValue('locationId', home.id);
+    } else if (annonce?.location) {
+      // `annonce.location` is an embedded snapshot copied at submit time (see `PlaceRecord`), not
+      // a reference to a saved `LocationRecord` — match it back to one by name/coordinates so the
+      // "Point de départ" dropdown reflects it. No match (e.g. the saved address was since edited or
+      // deleted) just leaves it unselected; the ad's own location is unaffected either way.
+      const match = locations.data.find(
+        l =>
+          l['vcard:given-name'] === annonce.location?.name &&
+          l['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:latitude'] === annonce.location?.latitude &&
+          l['vcard:hasAddress']?.['vcard:hasGeo']?.['vcard:longitude'] === annonce.location?.longitude
+      );
+      if (match) form.setFieldValue('locationId', match.id);
+    }
+  }, [open, mode, annonce, locations.data, form]);
+
+  // Where the ad is (for the recipients page's distance filter): the address picked on the
+  // "Diffusion" page, else — in `share` mode, where that page doesn't exist — the ad's own
+  // embedded location. `undefined` when not geolocated, which disables the filter.
+  const place = useMemo(() => {
+    if (mode === 'share') {
+      const point = annonce?.location && geoPoint({ 'vcard:latitude': annonce.location.latitude, 'vcard:longitude': annonce.location.longitude });
+      return point && { ...point, radiusKm: annonce?.location?.radius ? Number(annonce.location.radius) : undefined };
+    }
+    if (!geolocated) return undefined;
+    const point = geoPoint(locations.data.find(l => l.id === locationId)?.['vcard:hasAddress']?.['vcard:hasGeo']);
+    return point && { ...point, radiusKm: radius };
+  }, [mode, annonce, geolocated, locationId, radius, locations.data]);
+
+  const heading = translate(`composer.heading_${mode}`);
+  const stepCounter = steps.length > 1 ? ` (${stepIndex + 1}/${steps.length})` : '';
+
+  // Only read after the form has been validated (submit/delete), by which point `kind` is set.
+  const resourceUri: AnnonceKind = kind ?? 'offer';
+
+  // Validates only the current page's fields, so an error on page 2 can't block page 1's "Suivant".
+  const goNext = async () => {
+    await form.validateFields(STEP_FIELDS[step]);
+    setStepIndex(stepIndex + 1);
+  };
+
+  // The exchange classes differ between offers and requests (`maid:GiftOffer` vs
+  // `maid:GiftRequest`), and loan isn't offered for skills — drop a choice that no longer applies.
+  const onValuesChange = (changed: Partial<FormValues>, values: FormValues) => {
+    if (('kind' in changed || 'resourceType' in changed) && values.kind && values.exchangeType) {
+      const stillValid = exchangeTypesFor(values.kind, values.resourceType).some(t => t.value === values.exchangeType);
+      if (!stillValid) form.setFieldValue('exchangeType', undefined);
+    }
+  };
+
+  const submit = async () => {
+    setSubmitting(true);
+    try {
+      let annonceId = annonce?.id;
+
+      if (mode !== 'share') {
+        // In `create` every page was validated on "Suivant"; `edit` ends on the details page, so
+        // it has to be checked here (a required field left empty must not silently save). Only its
+        // visible fields, though: an error on the hidden type page couldn't be seen nor fixed.
+        let values: FormValues;
+        if (mode === 'edit') {
+          await form.validateFields([...STEP_FIELDS.details, ...STEP_FIELDS.distribution]);
+          values = form.getFieldsValue(true);
+        } else {
+          values = await form.validateFields();
+        }
+        const selectedLocation = locations.data.find(l => l.id === values.locationId);
+        // `undefined` (not geolocated) drops any existing `location` on update, since the data
+        // provider PUTs the merged resource and JSON serialization omits undefined keys.
+        const location = !values.geolocated
+          ? undefined
+          : selectedLocation
+            ? asPlace(selectedLocation, values.radius)
+            : annonce?.location
+              ? { ...annonce.location, radius: values.radius }
+              : undefined;
+
+        const resourceTypePredicate = RESOURCE_TYPE_PREDICATE[values.kind ?? initialKind];
+        // Same predicates as the previous (react-admin) version of L'Entraide, so that the ads it
+        // left in users' Pods keep working as is.
+        const variables: Record<string, any> = {
+          'pair:label': values.title,
+          'pair:description': values.content,
+          location,
+          'pair:depictedBy': values.images,
+          // Values picked before switching to "Annoncer" stay in the form store: drop them.
+          ...(resourceTypePredicate && { [resourceTypePredicate]: values.resourceType, 'pair:hasType': values.exchangeType }),
+          // `undefined` drops an existing expiration date on update, same as `location` above.
+          'maid:hasTimeCondition': values.limitedDuration
+            ? { type: 'maid:TimeCondition', 'maid:expirationDate': dayjs().add(values.expiryDays, 'day').toISOString() }
+            : undefined
+        };
+
+        if (mode === 'create') {
+          const { data } = await createAnnonce({ resource: resourceUri, values: variables });
+          annonceId = data?.id as string;
+        } else if (mode === 'edit' && annonce) {
+          await updateAnnonce({ resource: resourceUri, id: annonce.id, values: variables });
+        }
+      }
+
+      if (annonceId) {
+        // Same shapes as @activitypods/react's ShareDialog for ActivityPods 2.3 (see the pod-provider's
+        // `announcer` service). Everyone, creator or delegate, posts a plain `Announce`: the backend
+        // accepts it from a non-creator only if they're in `apods:announcers`. Share rights are
+        // granted by the creator with `interop:delegationAllowed`, which also grants view rights —
+        // only the creator may grant this (gated by RecipientPicker's `isCreator`).
+        const actorsWithNewShareRight = isCreator
+          ? Object.keys(invitations).filter(uri => invitations[uri].canShare && !savedInvitations[uri]?.canShare)
+          : [];
+        const actorsWithNewViewRight = Object.keys(invitations).filter(
+          uri => invitations[uri].canView && !savedInvitations[uri]?.canView && !actorsWithNewShareRight.includes(uri)
+        );
+
+        if (actorsWithNewViewRight.length > 0) {
+          await outbox.post({
+            type: 'Announce',
+            actor: outbox.owner,
+            object: annonceId,
+            to: actorsWithNewViewRight
+          });
+        }
+
+        if (actorsWithNewShareRight.length > 0) {
+          await outbox.post({
+            type: 'Announce',
+            actor: outbox.owner,
+            object: annonceId,
+            to: actorsWithNewShareRight,
+            'interop:delegationAllowed': true,
+            'interop:delegationLimit': 1
+          });
+        }
+      }
+
+      invalidate({ resource: resourceUri, invalidates: ['list', 'detail'] });
+      message.success(translate(mode === 'create' ? 'composer.published' : mode === 'edit' ? 'composer.updated' : 'composer.shared'));
+      onSaved?.();
+      onClose();
+    } catch (e: any) {
+      message.error(e.message);
+    }
+    setSubmitting(false);
+  };
+
+  const deleteAd = async () => {
+    if (!annonce) return;
+    setDeleting(true);
+    try {
+      await deleteAnnonce({ resource: resourceUri, id: annonce.id });
+      invalidate({ resource: resourceUri, invalidates: ['list'] });
+      message.success(translate('composer.deleted'));
+      onSaved?.();
+      onClose();
+    } catch (e: any) {
+      message.error(e.message);
+    }
+    setDeleting(false);
+  };
+
+  const primaryLabel = translate(
+    !isLastStep ? 'composer.next' : mode === 'create' ? 'composer.send' : 'composer.save'
+  );
+  const onPrimary = !isLastStep ? goNext : submit;
+
+  const secondaryLabel = translate(stepIndex > 0 ? 'composer.back' : 'composer.cancel');
+  const onSecondary = () => {
+    if (stepIndex > 0) setStepIndex(stepIndex - 1);
+    else onClose();
+  };
+
+  // Geolocation + expiry. Its own page in `create` (with room to explain the concept), appended
+  // to the details page in `edit`. Both limits are opt-in: each checkbox reveals its own fields.
+  // Wrapped in a name-less `Form.Item` only for its label, so "Options" looks like the other
+  // fields' labels.
+  const distribution = (
+    <Form.Item label={translate('composer.options')} style={{ marginBottom: 0 }}>
+      <OptionCheckbox name="geolocated" label={translate('composer.geolocated.label')} help={translate('composer.geolocated.help')} />
+      {geolocated && (
+        <div style={{ paddingLeft: 24 }}>
+          <Form.Item name="locationId" label={translate('composer.locality.label')} rules={[{ required: !annonce?.location, message: translate('composer.locality.required') }]}>
+            <LocationSelect />
+          </Form.Item>
+          <Form.Item name="radius" label={<LabelWithHelp label={translate('composer.radius.label')} help={translate('composer.radius.help')} />}>
+            <Slider min={5} max={50} step={5} marks={{ 5: '5 km', 50: '50 km' }} />
+          </Form.Item>
+        </div>
+      )}
+      <OptionCheckbox name="limitedDuration" label={translate('composer.limited_duration.label')} help={translate('composer.limited_duration.help')} />
+      {limitedDuration && (
+        <div style={{ paddingLeft: 24 }}>
+          <Form.Item
+            name="expiryDays"
+            label={<LabelWithHelp label={translate('composer.expiry.label')} help={translate('composer.expiry.help')} />}
+            rules={[{ required: true, message: translate('composer.expiry.required') }]}
+          >
+            <InputNumber min={1} max={365} suffix={translate('composer.expiry.days')} style={{ width: 140 }} />
+          </Form.Item>
+        </div>
+      )}
+    </Form.Item>
+  );
+
+  return (
+    <Modal
+      open={open}
+      onCancel={onClose}
+      // A misclick outside would throw away a multi-step form; close with the × or "Annuler".
+      maskClosable={false}
+      title={
+        <span className="app-brand" style={{ color: '#fff', fontSize: 18 }}>
+          {heading}
+          {stepCounter}
+        </span>
+      }
+      closeIcon={<CloseOutlined style={{ color: '#fff' }} />}
+      styles={{
+        // `clip-path` instead of `overflow: hidden` — the latter (even with a matching radius on
+        // the header, even with `transform` forcing a compositing layer) still leaves a white
+        // anti-aliasing seam on real, hardware-accelerated Firefox. `clip-path` defines a hard
+        // vector mask rather than relying on rasterized layer blending, which sidesteps that.
+        content: { padding: 0, clipPath: 'inset(0 round 8px)' },
+        header: {
+          margin: 0,
+          padding: '14px 20px',
+          background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)',
+          borderRadius: '8px 8px 0 0'
+        },
+        body: { padding: '16px 24px 0' },
+        footer: { margin: 0, padding: '16px 24px' }
+      }}
+      footer={
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div>
+            {mode === 'edit' && (
+              <Popconfirm title={translate('composer.delete_confirm')} okText={translate('composer.delete')} cancelText={translate('composer.cancel')} okButtonProps={{ danger: true }} onConfirm={deleteAd}>
+                <Button danger icon={<DeleteOutlined />} loading={deleting}>
+                  {!isMobile && translate('composer.delete')}
+                </Button>
+              </Popconfirm>
+            )}
+          </div>
+          <Space>
+            <Button onClick={onSecondary}>{secondaryLabel}</Button>
+            <Button type="primary" onClick={onPrimary} loading={submitting}>
+              {primaryLabel}
+            </Button>
+          </Space>
+        </div>
+      }
+      width={isMobile ? 'calc(100vw - 32px)' : 640}
+      style={isMobile ? { top: 16 } : undefined}
+      centered={!isMobile}
+      destroyOnHidden
+    >
+      <Form form={form} layout="vertical" onValuesChange={onValuesChange} style={{ display: step === 'recipients' ? 'none' : undefined }}>
+        <div style={{ display: step === 'type' ? 'block' : 'none' }}>
+          <Form.Item
+            name="kind"
+            label={translate('composer.kind.label')}
+            rules={[{ required: true, message: translate('composer.kind.required') }]}
+          >
+            <ChoiceCards options={kindOptions(translate)} />
+          </Form.Item>
+          {/* Only offers and requests are about a resource; nothing to ask until one is picked. */}
+          {(kind === 'offer' || kind === 'request') && (
+            <Form.Item name="resourceType" label={translate('composer.resource_type.label')} rules={[{ required: true, message: translate('composer.resource_type.required') }]}>
+              <ChoiceCards options={resourceTypeOptions(translate)} />
+            </Form.Item>
+          )}
+          {/* Offers and requests don't share exchange classes, and loan doesn't apply to skills,
+              so wait for both choices above. Optional: clicking the selected card unselects it. */}
+          {(kind === 'offer' || kind === 'request') && resourceType && (
+            <Form.Item name="exchangeType" label={translate('composer.exchange_type.label')}>
+              <ChoiceCards
+                allowDeselect
+                // Up to 4 choices: narrower cards so they fit on a single line on desktop.
+                minCardWidth={120}
+                options={exchangeTypesFor(kind, resourceType).map(t => ({
+                  value: t.value,
+                  title: translate(`exchange_types.${t.key}.label`),
+                  description: translate(`exchange_types.${t.key}.description`),
+                  icon: EXCHANGE_ICON[t.value]
+                }))}
+              />
+            </Form.Item>
+          )}
+        </div>
+        <div style={{ display: step === 'details' ? 'block' : 'none' }}>
+          <Form.Item name="title" label={translate('composer.title.label')} rules={[{ required: true, message: translate('composer.title.required') }]}>
+            <Input
+              placeholder={translate(
+                kind === 'announcement'
+                  ? 'composer.title.placeholder_announcement'
+                  : exchangeTypeDef(exchangeType)
+                    ? `exchange_types.${exchangeTypeDef(exchangeType)!.key}.example`
+                    : 'composer.title.placeholder'
+              )}
+            />
+          </Form.Item>
+          <Form.Item name="content" label={translate('composer.content.label')} rules={[{ required: true, message: translate('composer.content.required') }]} style={{ marginBottom: 16 }}>
+            <Input.TextArea rows={5} placeholder={translate(CONTENT_PLACEHOLDER_KEY[kind ?? 'offer'])} />
+          </Form.Item>
+          <Form.Item name="images" label={translate('composer.images')}>
+            <ImageUpload />
+          </Form.Item>
+          {mode === 'edit' && distribution}
+        </div>
+        {mode !== 'edit' && <div style={{ display: step === 'distribution' ? 'block' : 'none' }}>{distribution}</div>}
+      </Form>
+      {step === 'recipients' && identity && (
+        <RecipientPicker invitations={invitations} organizerUri={creatorUri ?? identity.id} isCreator={isCreator} place={place} onChange={setInvitations} />
+      )}
+    </Modal>
+  );
+};
+
+export default AnnonceComposer;

@@ -49,7 +49,7 @@ attach-backend-prod:
 
 publish-frontend:
 	TAG=`git describe --tags --abbrev=0` $(DOCKER_COMPOSE_PROD) build app-frontend
-	TAG=`git describe --tags --abbrev=0` $(DOCKER_COMPOSE_PROD) push app-backend
+	TAG=`git describe --tags --abbrev=0` $(DOCKER_COMPOSE_PROD) push app-frontend
 
 publish-backend:
 	TAG=`git describe --tags --abbrev=0` $(DOCKER_COMPOSE_PROD) build app-backend

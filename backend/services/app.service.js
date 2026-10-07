@@ -15,13 +15,16 @@ module.exports = {
     },
     oidc: {
       clientUri: CONFIG.FRONT_URL,
-      redirectUris: urlJoin(CONFIG.FRONT_URL, 'auth-callback'),
+      redirectUris: urlJoin(CONFIG.FRONT_URL, 'login'),
       postLogoutRedirectUris: urlJoin(CONFIG.FRONT_URL, 'login?logout=true'),
       tosUri: null
     },
     accessNeeds: {
       required: [
         {
+          // Already defined on the shared shape repository. Same properties as the previous
+          // version of L'Entraide (pair:label, maid:hasTimeCondition...), plus an embedded
+          // as:location. SHACL shapes aren't enforced at write time, so this is safe.
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/maid/Offer'),
           accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
         },
@@ -30,28 +33,41 @@ module.exports = {
           accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
         },
         {
-          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
+          // Information shared with one's network, with nothing offered or requested in return.
+          // A type of our own rather than an Offer/Request flavour, so that other apps reading
+          // those containers don't mistake it for one.
+          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/maid/Announcement'),
           accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
         },
         {
+          // Read-only: used to display the author's name/avatar on ads and comments.
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Profile'),
           accessMode: 'acl:Read'
         },
         {
-          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Group'),
-          accessMode: 'acl:Read'
-        },
-        {
+          // For the (optional) image attached to an ad.
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/File'),
           accessMode: ['acl:Read', 'acl:Write']
         },
+        {
+          // The user's saved addresses (picked from in the ad composer) — a reusable resource,
+          // distinct from the embedded as:location copied onto each ad at submit time.
+          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/vcard/Location'),
+          accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
+        },
+        {
+          // Comments are posted as a `Create{Note, inReplyTo}` activity — the Pod checks the
+          // activity's object type against the app's granted shape trees, so `as:Note` needs its
+          // own access need even though comments aren't stored in a dedicated container.
+          shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/as/Note'),
+          accessMode: ['acl:Read', 'acl:Write']
+        },
+        // Required for outbox-posting (sharing, commenting, liking, contact requests) to be
+        // allowed at all — without these the Pod returns 403 "no permission to post to the
+        // outbox (apods:PostOutbox)", confirmed against a live Pod provider.
         'apods:ReadInbox',
         'apods:ReadOutbox',
-        'apods:PostOutbox',
-        'apods:QuerySparqlEndpoint',
-        'apods:CreateWacGroup',
-        'apods:CreateCollection',
-        'apods:UpdateWebId'
+        'apods:PostOutbox'
       ],
       optional: []
     },
