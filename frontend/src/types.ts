@@ -40,11 +40,13 @@ export type ExchangeType =
 export type AnnonceRecord = {
   id: string;
   type?: string | string[];
-  /** Short title (AS2 `as:name`, compacted to the bare `name` key) — shown in the detail page
-   *  header and used in notifications. */
-  name?: string;
-  /** The ad's free-text body. */
-  content?: string;
+  /** Short title — shown in the detail page header and used in notifications. Same predicates as
+   *  the previous (react-admin) version of L'Entraide for every field below that it had too, so
+   *  that the ads it left in users' Pods keep working. */
+  'pair:label'?: string;
+  /** The ad's free-text body — Markdown in ads posted with the previous version. */
+  'pair:description'?: string;
+  /** Embedded place. Old ads' `maid:hasGeoCondition` is ignored (but kept on save). */
   location?: PlaceRecord;
   /** Only set on offers. */
   'maid:offerOfResourceType'?: ResourceType;
@@ -53,9 +55,10 @@ export type AnnonceRecord = {
   /** Don / troc / vente… Absent on ads posted before this was (re)introduced. Read with
    *  `exchangeTypeCurie()` from `utils/ontology` (`@type: "@id"` in the pair context). */
   'pair:hasType'?: ExchangeType | { id: string };
-  /** Optional expiration date; absent means the ad never expires. */
-  'maid:expirationDate'?: string;
-  /** Up to 10 photos — read with `imagesOf()` from `utils/ontology`, since a single value comes
+  /** Optional expiration date, read with `expirationDateOf()` from `utils/ontology`; absent means
+   *  the ad never expires. */
+  'maid:hasTimeCondition'?: { type?: string; 'maid:expirationDate'?: string };
+  /** Up to 10 photos (a single one in ads posted with the previous version) — read with `imagesOf()` from `utils/ontology`, since a single value comes
    *  back bare rather than as a 1-element array. */
   'pair:depictedBy'?: string | string[] | { id: string } | { id: string }[];
   'dc:creator': string;

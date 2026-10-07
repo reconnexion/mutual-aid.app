@@ -22,9 +22,9 @@ module.exports = {
     accessNeeds: {
       required: [
         {
-          // Already defined on the shared shape repository — we reuse the type, but populate our
-          // own (simpler) set of properties on it (as:location, maid:expirationDate...). SHACL
-          // shapes aren't enforced at write time, so this is safe.
+          // Already defined on the shared shape repository. Same properties as the previous
+          // version of L'Entraide (pair:label, maid:hasTimeCondition...), plus an embedded
+          // as:location. SHACL shapes aren't enforced at write time, so this is safe.
           shapeTreeUri: urlJoin(CONFIG.SHAPE_REPOSITORY_URL, 'shapetrees/maid/Offer'),
           accessMode: ['acl:Read', 'acl:Write', 'acl:Control']
         },

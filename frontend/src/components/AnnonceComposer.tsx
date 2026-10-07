@@ -11,7 +11,7 @@ import RecipientPicker from './RecipientPicker';
 import useActivityCollection from '../hooks/useActivityCollection';
 import useIsMobile from '../hooks/useIsMobile';
 import useOutbox from '../hooks/useOutbox';
-import { exchangeTypeCurie, imagesOf, literalValue, resourceTypeCurie } from '../utils/ontology';
+import { exchangeTypeCurie, expirationDateOf, imagesOf, resourceTypeCurie } from '../utils/ontology';
 import { exchangeTypeDef, exchangeTypesFor } from '../config/exchangeTypes';
 import { EXCHANGE_ICON, KIND_ICON, RESOURCE_TYPE_ICON } from '../config/icons';
 import { geoPoint } from '../utils/geo';
@@ -94,7 +94,7 @@ type FormValues = {
   geolocated: boolean;
   locationId?: string;
   radius: number;
-  /** Off = no `maid:expirationDate`: the ad stays until deleted ("Expire dans" is hidden). */
+  /** Off = no `maid:hasTimeCondition/maid:expirationDate`: the ad stays until deleted ("Expire dans" is hidden). */
   limitedDuration: boolean;
   expiryDays: number;
   images?: string[];
@@ -191,13 +191,13 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     if (!open) return;
     setStepIndex(0);
     if (annonce) {
-      const expirationDate = literalValue(annonce['maid:expirationDate']);
+      const expirationDate = expirationDateOf(annonce);
       const radius = annonce.location?.radius ? Number(annonce.location.radius) : 15;
       form.setFieldsValue({
         kind: initialKind,
         geolocated: !!annonce.location,
-        title: annonce.name,
-        content: annonce.content,
+        title: annonce['pair:label'],
+        content: annonce['pair:description'],
         resourceType: RESOURCE_TYPE_PREDICATE[initialKind] ? resourceTypeCurie((annonce as any)[RESOURCE_TYPE_PREDICATE[initialKind]!]) : undefined,
         exchangeType: exchangeTypeCurie(annonce['pair:hasType']),
         radius,
@@ -298,15 +298,19 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
               : undefined;
 
         const resourceTypePredicate = RESOURCE_TYPE_PREDICATE[values.kind ?? initialKind];
+        // Same predicates as the previous (react-admin) version of L'Entraide, so that the ads it
+        // left in users' Pods keep working as is.
         const variables: Record<string, any> = {
-          name: values.title,
-          content: values.content,
+          'pair:label': values.title,
+          'pair:description': values.content,
           location,
           'pair:depictedBy': values.images,
           // Values picked before switching to "Annoncer" stay in the form store: drop them.
           ...(resourceTypePredicate && { [resourceTypePredicate]: values.resourceType, 'pair:hasType': values.exchangeType }),
           // `undefined` drops an existing expiration date on update, same as `location` above.
-          'maid:expirationDate': values.limitedDuration ? dayjs().add(values.expiryDays, 'day').toISOString() : undefined
+          'maid:hasTimeCondition': values.limitedDuration
+            ? { type: 'maid:TimeCondition', 'maid:expirationDate': dayjs().add(values.expiryDays, 'day').toISOString() }
+            : undefined
         };
 
         if (mode === 'create') {

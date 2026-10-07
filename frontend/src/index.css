@@ -41,3 +41,43 @@ a {
     aspect-ratio: 1 / 1;
   }
 }
+
+/** Ad text (`MarkdownContent`): old ads are Markdown, new ones plain text — keep every line break
+ *  of either (a single newline is only a soft break in Markdown), and compact block spacing. */
+.app-markdown p,
+.app-markdown li {
+  white-space: pre-wrap;
+}
+
+.app-markdown p {
+  margin: 0 0 8px;
+}
+
+.app-markdown > :last-child,
+.app-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.app-markdown :is(h1, h2, h3, h4, h5, h6) {
+  margin: 12px 0 4px;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.app-markdown :is(ul, ol) {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+.app-markdown img {
+  max-width: 100%;
+}
+
+/** In the feed, only the first 3 lines of an ad's text are shown. */
+.app-markdown-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}

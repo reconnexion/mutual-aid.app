@@ -16,8 +16,8 @@ export const authProvider = apAuthProvider({
 const JSON_CONTEXT = ['https://www.w3.org/ns/activitystreams', urlJoin(new URL(BACKEND_URL).origin, '.well-known/context.jsonld')];
 
 /** Resources living on the logged-in user's own Pod. `offer`/`request` are already defined on
- *  the shared shape repository — we reuse the type, but populate our own simpler set of
- *  properties on them (see `types.ts`). Ads shared with the user land here automatically: the
+ *  the shared shape repository — we reuse the type, with the same properties as the previous
+ *  version of L'Entraide plus an embedded `as:location` (see `types.ts`). Ads shared with the user land here automatically: the
  *  Pod provider's `announcer` service attaches an `Announce`d resource straight into the
  *  recipient's own `offer`/`request` container, so a plain `getList` picks it up. */
 export const dataProvider = apDataProvider({

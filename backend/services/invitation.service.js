@@ -133,7 +133,7 @@ module.exports = {
 
         const types = arrayOf(annonce.type);
         const kind = types.includes('maid:Request') ? 'request' : types.includes('maid:Announcement') ? 'announcement' : 'offer';
-        const annonceTitle = annonce.name || '';
+        const annonceTitle = annonce['pair:label'] || '';
 
         await ctx.call('pod-notifications.send', {
           template: {

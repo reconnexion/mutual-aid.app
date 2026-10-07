@@ -5,24 +5,25 @@ import { useTranslate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
 import ImageGallery from './ImageGallery';
+import MarkdownContent from './MarkdownContent';
 import LikeButton from './LikeButton';
 import useActorProfile from '../hooks/useActorProfile';
 import useActivityCollection from '../hooks/useActivityCollection';
 import useProfileUrl from '../hooks/useProfileUrl';
 import { formatUsername } from '../utils/formatUsername';
 import { AVATAR_SIZE } from '../config/layout';
-import { exchangeTypeCurie, imagesOf, isExpired, literalValue } from '../utils/ontology';
+import { exchangeTypeCurie, expirationDateOf, imagesOf, isExpired } from '../utils/ontology';
 import { collectionUriOf } from '../utils/collections';
 import { exchangeTypeLabelKey } from '../config/exchangeTypes';
 import { EXCHANGE_ICON, KIND_ICON } from '../config/icons';
 import type { AnnonceKind, AnnonceRecord } from '../types';
 
-const { Paragraph, Text } = Typography;
+const { Text } = Typography;
 
 type Translate = (key: string, options?: any) => string;
 
 export const expiryLabel = (annonce: AnnonceRecord, translate: Translate) => {
-  const expirationDate = literalValue(annonce['maid:expirationDate']);
+  const expirationDate = expirationDateOf(annonce);
   if (!expirationDate) return translate('card.no_expiry');
   // Same test as the feed's masking, so an ad is never both listed and labelled "Expirée".
   if (isExpired(annonce)) return translate('card.expired');
@@ -35,12 +36,14 @@ type Props = {
   annonce: AnnonceRecord;
   kind: AnnonceKind;
   showFooter?: boolean;
+  /** Only the first lines of the text, linking to the detail page (the feed). Off on the detail page. */
+  truncate?: boolean;
 };
 
 /** A chat-bubble-style card, matching the mockup: the avatar sits beside the bubble (not inside
  *  it), everything left-aligned, flat corner near the avatar — like a received WhatsApp message.
  *  "Modifier"/"Partager" live only in the detail page's header — not worth repeating here. */
-const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
+const AnnonceCard = ({ annonce, kind, showFooter = true, truncate = true }: Props) => {
   const translate = useTranslate();
   const { data: author } = useActorProfile(annonce['dc:creator']);
   const { items: replies } = useActivityCollection(collectionUriOf(annonce, 'replies'));
@@ -77,20 +80,24 @@ const AnnonceCard = ({ annonce, kind, showFooter = true }: Props) => {
             </Text>
           </div>
           <Space size={8} wrap style={{ marginBottom: 8, display: 'flex' }}>
-            {annonce.name && (
+            {annonce['pair:label'] && (
               <Text strong style={{ fontSize: 17 }}>
-                {annonce.name}
+                {annonce['pair:label']}
               </Text>
             )}
             <Tag icon={exchangeType && exchangeLabelKey ? EXCHANGE_ICON[exchangeType] : KIND_ICON[kind]} style={{ marginInlineEnd: 0 }}>
               {translate(exchangeLabelKey ?? `kinds.${kind}`)}
             </Tag>
           </Space>
-          <Link to={detailUrl} style={{ color: 'inherit' }}>
-            <Paragraph ellipsis={showFooter ? { rows: 3 } : false} style={{ whiteSpace: 'pre-wrap', marginBottom: images.length ? 12 : 8 }}>
-              {annonce.content}
-            </Paragraph>
-          </Link>
+          {truncate ? (
+            <Link to={detailUrl} style={{ color: 'inherit', display: 'block', marginBottom: images.length ? 12 : 8 }}>
+              <MarkdownContent className="app-markdown-clamp" disableLinks>
+                {annonce['pair:description']}
+              </MarkdownContent>
+            </Link>
+          ) : (
+            <MarkdownContent style={{ marginBottom: images.length ? 12 : 8 }}>{annonce['pair:description']}</MarkdownContent>
+          )}
           {images.length > 0 && (
             <div style={{ marginBottom: 8 }}>
               <ImageGallery images={images} />

@@ -1,4 +1,4 @@
-import type { ExchangeType, ResourceType } from '../types';
+import type { AnnonceRecord, ExchangeType, ResourceType } from '../types';
 
 /** `maid:offerOfResourceType` / `maid:requestOfResourceType` are typed `@type: "@id"` in the
  *  backend's JSON-LD context (see `backend/services/core/core.service.js`), so a GET returns
@@ -36,11 +36,16 @@ export const literalValue = (value: unknown): string | undefined => {
   return typeof wrapped === 'string' ? wrapped : undefined;
 };
 
-/** Whether an ad's `maid:expirationDate` is in the past. An ad without one never expires.
+/** `maid:hasTimeCondition/maid:expirationDate` — same format as the previous (react-admin) version
+ *  of L'Entraide, whose ads are still in users' Pods. */
+export const expirationDateOf = (annonce: AnnonceRecord): string | undefined =>
+  literalValue(annonce['maid:hasTimeCondition']?.['maid:expirationDate']);
+
+/** Whether an ad's expiration date is in the past. An ad without one never expires.
  *  Expired ads are only ever masked, never deleted (see `matchesFilter` in `config/filters.ts`):
  *  they stay in the Pod, and still show up under "Mes petites annonces" for their author. */
-export const isExpired = (annonce: { 'maid:expirationDate'?: unknown }, now = Date.now()): boolean => {
-  const expirationDate = literalValue(annonce['maid:expirationDate']);
+export const isExpired = (annonce: AnnonceRecord, now = Date.now()): boolean => {
+  const expirationDate = expirationDateOf(annonce);
   if (!expirationDate) return false;
   const time = new Date(expirationDate).getTime();
   return !Number.isNaN(time) && time < now;

@@ -75,7 +75,7 @@ const AnnonceShowPage = () => {
         >
           <Button icon={<ArrowLeftOutlined />} type="text" onClick={() => navigate(-1)} />
           <Title level={5} className="app-brand" style={{ margin: 0, flex: 1, minWidth: 0, fontSize: 19 }} ellipsis>
-            {annonce.name || translate('show.default_title', { name: author?.['vcard:given-name'] || translate('app.neighbour') })}
+            {annonce['pair:label'] || translate('show.default_title', { name: author?.['vcard:given-name'] || translate('app.neighbour') })}
           </Title>
           {mine && (
             <Button
@@ -101,7 +101,7 @@ const AnnonceShowPage = () => {
         </div>
 
         <div style={{ flex: 1, minHeight: 0, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <AnnonceCard annonce={annonce} kind={kind!} />
+          <AnnonceCard annonce={annonce} kind={kind!} truncate={false} />
           <CommentList replies={replies} isLoading={repliesLoading} annonceCreator={annonce['dc:creator']} />
         </div>
 
