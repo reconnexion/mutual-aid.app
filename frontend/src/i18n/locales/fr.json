@@ -108,9 +108,9 @@
     "search": "Rechercher",
     "view": "Voir",
     "share": "Partager",
-    "out_of_range_one": "{{count}} contact situé au-delà de {{radius}} km non affiché.",
-    "out_of_range_other": "{{count}} contacts situés au-delà de {{radius}} km non affichés.",
+    "radius_hint": "Seuls les contacts situés à moins de {{radius}} km, ou sans adresse connue, sont affichés.",
     "none_in_range": "Aucun contact dans un rayon de {{radius}} km. Élargissez le rayon ou désactivez la géolocalisation de votre petite annonce.",
+    "no_match": "Aucun contact ne correspond à « {{search}} ».",
     "none": "Aucun contact pour le moment. Ajoutez des voisins à votre réseau depuis votre Pod pour pouvoir leur partager des petites annonces."
   },
   "location": {

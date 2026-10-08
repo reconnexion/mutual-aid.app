@@ -108,9 +108,9 @@
     "search": "Search",
     "view": "View",
     "share": "Share",
-    "out_of_range_one": "{{count}} contact located more than {{radius}} km away is not shown.",
-    "out_of_range_other": "{{count}} contacts located more than {{radius}} km away are not shown.",
+    "radius_hint": "Only contacts within {{radius}} km, or without a known address, are shown.",
     "none_in_range": "No contact within {{radius}} km. Widen the radius or turn off your ad's geolocation.",
+    "no_match": "No contact matches \"{{search}}\".",
     "none": "No contacts yet. Add neighbours to your network from your Pod to be able to share ads with them."
   },
   "location": {
