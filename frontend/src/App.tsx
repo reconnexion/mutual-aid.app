@@ -18,6 +18,7 @@ import AppShell from './components/AppShell';
 import HomePage from './pages/HomePage';
 import AnnonceListPage from './pages/AnnonceListPage';
 import AnnonceShowPage from './pages/AnnonceShowPage';
+import Banner from './Banner';
 
 const antdLocale = APP_LANG === 'fr' ? frFR : enUS;
 
@@ -25,6 +26,7 @@ const App = () => (
   <BrowserRouter>
     <ConfigProvider locale={antdLocale} theme={theme}>
       <AntdApp>
+        <Banner />
         <Refine
           authProvider={authProvider}
           dataProvider={dataProvider}
