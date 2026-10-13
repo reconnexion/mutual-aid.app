@@ -5,6 +5,7 @@ import { UserOutlined } from '@ant-design/icons';
 
 import type { Identity, InvitationState, ProfileRecord } from '../types';
 import { distanceKm, geoPoint, type GeoPoint } from '../utils/geo';
+import { formatUsername } from '../utils/formatUsername';
 
 const { Text } = Typography;
 
@@ -138,7 +139,8 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
             return (
               <List.Item style={{ paddingLeft: 0, paddingRight: 0, gap: 12, flexWrap: 'wrap' }}>
                 <List.Item.Meta
-                  avatar={<Avatar src={profile['vcard:photo']} icon={<UserOutlined />} size="small" />}
+                  className="ap-contact-meta"
+                  avatar={<Avatar src={profile['vcard:photo']} icon={<UserOutlined />} size={44} />}
                   title={
                     <Text>
                       {profile['vcard:given-name']}
@@ -149,6 +151,7 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
                       )}
                     </Text>
                   }
+                  description={formatUsername(webId)}
                 />
                 <div style={{ display: 'flex', gap: 24 }}>
                   <div style={{ textAlign: 'center' }}>
