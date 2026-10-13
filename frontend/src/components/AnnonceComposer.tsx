@@ -433,8 +433,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
     <Modal
       open={open}
       onCancel={onClose}
-      // A misclick outside would throw away a multi-step form; close with the × or "Annuler".
-      maskClosable={false}
+      // When creating, a misclick outside would throw away a multi-step form; close with the × or "Annuler".
+      maskClosable={mode !== 'create'}
       title={
         <span className="app-brand" style={{ color: '#fff', fontSize: 18 }}>
           {heading}
