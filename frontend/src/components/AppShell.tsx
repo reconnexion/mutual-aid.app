@@ -35,9 +35,8 @@ const AppShell = ({ children }: { children: ReactNode }) => {
   const [searchParams] = useSearchParams();
   const [composerRequest, setComposerRequest] = useState<ComposerRequest | null>(null);
   const isMobile = useIsMobile();
-  // Mobile only: which of the two panes is showing right now (desktop always shows both). Starts
-  // on the content, i.e. all the ads, rather than on the categories.
-  const [mobileShowContent, setMobileShowContent] = useState(true);
+  // Mobile only: which of the two panes is showing right now (desktop always shows both).
+  const [mobileShowContent, setMobileShowContent] = useState(false);
   const { items } = useAnnonces();
   // `listeningTo` is empty until the actor document is loaded; the checks re-run once it is.
   const { data: ownActor } = useOwnActor();
