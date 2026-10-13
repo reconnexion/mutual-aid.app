@@ -71,11 +71,15 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, truncate = true }: Prop
         }}
       >
         <div style={{ padding: '10px 14px 8px' }}>
-          <div style={{ marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' }}>
-            <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer">
+          {/* On one line: a handle too long for what the name leaves is cut with an ellipsis */}
+          <div style={{ marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6, minWidth: 0 }}>
+            <a href={profileUrl(annonce['dc:creator'])} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0 }}>
               <Text strong>{author?.['vcard:given-name'] || translate('app.neighbour')}</Text>
             </a>
-            <Text type="secondary" style={{ fontSize: 11 }}>
+            <Text
+              type="secondary"
+              style={{ fontSize: 11, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >
               {formatUsername(annonce['dc:creator'])}
             </Text>
           </div>
