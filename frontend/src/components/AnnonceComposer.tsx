@@ -444,12 +444,13 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
         content: { padding: 0, clipPath: 'inset(0 round 8px)' },
         header: {
           margin: 0,
-          padding: '14px 20px',
+          padding: isMobile ? '12px 12px' : '14px 20px',
           background: 'linear-gradient(135deg, #1677ff 0%, #4c9aff 100%)',
           borderRadius: '8px 8px 0 0'
         },
-        body: { padding: '16px 24px 0' },
-        footer: { margin: 0, padding: '16px 24px' }
+        // Thinner on mobile, to leave more room to the content
+        body: { padding: isMobile ? '12px 12px 0' : '16px 24px 0' },
+        footer: { margin: 0, padding: isMobile ? 12 : '16px 24px' }
       }}
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -470,8 +471,8 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
           </Space>
         </div>
       }
-      width={isMobile ? 'calc(100vw - 32px)' : 640}
-      style={isMobile ? { top: 16 } : undefined}
+      width={isMobile ? 'calc(100vw - 16px)' : 640}
+      style={isMobile ? { top: 8, maxWidth: 'calc(100vw - 16px)' } : undefined}
       centered={!isMobile}
       destroyOnHidden
     >
