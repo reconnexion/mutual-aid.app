@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Form, Typography, theme } from 'antd';
 
+import useIsMobile from '../hooks/useIsMobile';
+
 const { Text } = Typography;
 
 export type ChoiceOption<T extends string> = {
@@ -25,17 +27,23 @@ type Props<T extends string> = {
 /** A radio group rendered as a row of cards, each with a title and a one-line description — for
  *  the composer's "Je souhaite…" / "Il s'agit de…" choices, where a bare `Segmented` (with a
  *  preselected default) didn't make it obvious there was a decision to make, nor what the
- *  options meant. Wraps to as many rows as needed on narrow screens. */
+ *  options meant. Wraps to as many rows as needed on narrow screens, and is a plain list (one
+ *  option per line) on mobile. */
 const ChoiceCards = <T extends string>({ options, value, onChange, disabled, allowDeselect, minCardWidth = 150 }: Props<T>) => {
   const { token } = theme.useToken();
   // Mirrors the red outline an `Input` gets when its `Form.Item` fails validation.
   const { status } = Form.Item.useStatus();
   const invalid = status === 'error' && value === undefined;
+  const isMobile = useIsMobile();
 
   return (
     <div
       role="radiogroup"
-      style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${minCardWidth}px, 1fr))`, gap: 8 }}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : `repeat(auto-fit, minmax(${minCardWidth}px, 1fr))`,
+        gap: isMobile ? 6 : 8
+      }}
     >
       {options.map(option => {
         const selected = option.value === value;
@@ -57,8 +65,8 @@ const ChoiceCards = <T extends string>({ options, value, onChange, disabled, all
             style={{
               display: 'flex',
               gap: 10,
-              alignItems: 'flex-start',
-              padding: '10px 12px',
+              alignItems: isMobile ? 'center' : 'flex-start',
+              padding: isMobile ? '6px 12px' : '10px 12px',
               borderRadius: token.borderRadiusLG,
               border: `2px solid ${selected ? token.colorPrimary : invalid ? token.colorError : token.colorBorderSecondary}`,
               background: selected ? token.colorPrimaryBg : token.colorBgContainer,
@@ -83,7 +91,8 @@ const ChoiceCards = <T extends string>({ options, value, onChange, disabled, all
               <Text strong style={{ display: 'block', color: selected ? token.colorPrimary : undefined }}>
                 {option.title}
               </Text>
-              <Text type="secondary" style={{ fontSize: 12, lineHeight: '16px' }}>
+              {/* `display: block`, or the line height wouldn't apply to this inline text */}
+              <Text type="secondary" style={{ display: 'block', fontSize: 12, lineHeight: '16px' }}>
                 {option.description}
               </Text>
             </div>
