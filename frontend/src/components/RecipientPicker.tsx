@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type UIEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGetIdentity, useInfiniteList, useTranslate, type CrudFilters } from '@refinedev/core';
 import { Alert, Avatar, Input, List, Spin, Switch, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
@@ -52,7 +52,7 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
 
   const { result, query } = useInfiniteList<ProfileRecord>({
     resource: 'profile',
-    pagination: { pageSize: 20, mode: 'server' },
+    pagination: { pageSize: 50, mode: 'server' },
     sorters: [{ field: 'vcard:given-name', order: 'asc' }],
     filters
   });
@@ -73,13 +73,17 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
     [result.data, organizerUri, identity, place]
   );
 
-  // Load the next page when the list is scrolled near its end
-  const onScroll = (e: UIEvent<HTMLDivElement>) => {
-    const { scrollTop, clientHeight, scrollHeight } = e.currentTarget;
-    if (scrollTop + clientHeight >= scrollHeight - 100 && result.hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
+  // Load the next page before the end of the list is reached: as soon as less than one visible
+  // height of contacts is left below, so that scrolling doesn't stop on a spinner
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const loadMoreIfNeeded = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || !result.hasNextPage || isFetchingNextPage) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - el.clientHeight) fetchNextPage();
+  }, [result.hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Also check when a page lands, in case the list was already scrolled that far while it loaded
+  useEffect(loadMoreIfNeeded, [loadMoreIfNeeded, result.data]);
 
   const changeCanView = (webId: string) => {
     const state = invitations[webId] ?? {
@@ -114,7 +118,11 @@ const RecipientPicker = ({ invitations, organizerUri, isCreator, place, onChange
       />
       {/* Only the list scrolls, so the search field and the dialog's buttons stay in view
           even with hundreds of contacts. */}
-      <div style={{ maxHeight: 'min(400px, 50vh)', overflowY: 'auto' }} onScroll={onScroll}>
+      <div
+        ref={scrollRef}
+        style={{ maxHeight: 'min(400px, 50vh)', overflowY: 'auto' }}
+        onScroll={loadMoreIfNeeded}
+      >
         <List
           loading={query.isLoading}
           dataSource={contacts}
