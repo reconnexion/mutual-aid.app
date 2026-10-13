@@ -3,11 +3,10 @@ import { fetchJson } from '@activitypods/refine-providers/utils';
 
 import { authProvider } from '../providers';
 import useOwnActor from './useOwnActor';
-import urlJoin from '../utils/urlJoin';
-import { BACKEND_URL } from '../config/env';
+import { JSONLD_CONTEXT_URL } from '../config/env';
 
 const AS2_CONTEXT = ['https://www.w3.org/ns/activitystreams'];
-const DEFAULT_CONTEXT = [...AS2_CONTEXT, urlJoin(new URL(BACKEND_URL).origin, '.well-known/context.jsonld')];
+const DEFAULT_CONTEXT = [...AS2_CONTEXT, JSONLD_CONTEXT_URL];
 
 /** The Pod's own `setRightsHandler` grants read access matching an activity's `to`/`cc` the
  *  moment it's posted through the creator's own outbox session — including public read when

@@ -1,6 +1,6 @@
 import { authProvider as apAuthProvider, dataProvider as apDataProvider } from '@activitypods/refine-providers';
 import urlJoin from '../utils/urlJoin';
-import { BACKEND_URL, CLIENT_ID, SHAPE_REPOSITORY_URL } from '../config/env';
+import { CLIENT_ID, JSONLD_CONTEXT_URL, SHAPE_REPOSITORY_URL } from '../config/env';
 
 export const authProvider = apAuthProvider({
   clientId: CLIENT_ID,
@@ -13,7 +13,7 @@ export const authProvider = apAuthProvider({
  *  `maid:requestOfResourceType` as `@type: "@id"` and `maid:expirationDate` as `xsd:dateTime`
  *  (see backend's `services/core/core.service.js`). Without it, those fields would be submitted
  *  as plain string literals instead of typed values. */
-const JSON_CONTEXT = ['https://www.w3.org/ns/activitystreams', urlJoin(new URL(BACKEND_URL).origin, '.well-known/context.jsonld')];
+const JSON_CONTEXT = ['https://www.w3.org/ns/activitystreams', JSONLD_CONTEXT_URL];
 
 /** Resources living on the logged-in user's own Pod. `offer`/`request` are already defined on
  *  the shared shape repository — we reuse the type, with the same properties as the previous
