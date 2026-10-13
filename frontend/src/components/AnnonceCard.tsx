@@ -1,6 +1,7 @@
+import type { MouseEvent } from 'react';
 import { Avatar, Button, Space, Tag, Typography } from 'antd';
 import { CommentOutlined, UserOutlined } from '@ant-design/icons';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useTranslate } from '@refinedev/core';
 import dayjs from 'dayjs';
 
@@ -55,14 +56,28 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, truncate = true }: Prop
   const exchangeType = exchangeTypeCurie(annonce['pair:hasType']);
   const exchangeLabelKey = kind !== 'announcement' ? exchangeTypeLabelKey(exchangeType) : undefined;
   const detailUrl = `/annonces/${kind}/${encodeURIComponent(annonce.id)}`;
+  const navigate = useNavigate();
+
+  // In the feed, a click anywhere on the bubble opens the ad — except on what has its own action
+  // (links, buttons, photos opening the lightbox), on what is rendered in a portal (the lightbox
+  // itself: React events bubble out of portals, the DOM doesn't), or when selecting text.
+  const openOnClick = (e: MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (!e.currentTarget.contains(target)) return;
+    if (target.closest('a, button, [data-no-card-link]')) return;
+    if (window.getSelection()?.toString()) return;
+    navigate(detailUrl);
+  };
 
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', width: '100%', maxWidth: 640 }}>
       <Avatar src={author?.['vcard:photo']} icon={<UserOutlined />} size={AVATAR_SIZE} style={{ flex: '0 0 auto' }} />
       <div
+        onClick={truncate ? openOnClick : undefined}
         style={{
           flex: 1,
           minWidth: 0,
+          cursor: truncate ? 'pointer' : undefined,
           background: '#fff',
           border: '1px solid #f0f0f0',
           borderRadius: '2px 8px 8px 8px',
@@ -86,7 +101,13 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, truncate = true }: Prop
           <Space size={8} wrap style={{ marginBottom: 8, display: 'flex' }}>
             {annonce['pair:label'] && (
               <Text strong style={{ fontSize: 17 }}>
-                {annonce['pair:label']}
+                {truncate ? (
+                  <Link to={detailUrl} style={{ color: 'inherit' }}>
+                    {annonce['pair:label']}
+                  </Link>
+                ) : (
+                  annonce['pair:label']
+                )}
               </Text>
             )}
             <Tag icon={exchangeType && exchangeLabelKey ? EXCHANGE_ICON[exchangeType] : KIND_ICON[kind]} style={{ marginInlineEnd: 0 }}>
@@ -103,7 +124,7 @@ const AnnonceCard = ({ annonce, kind, showFooter = true, truncate = true }: Prop
             <MarkdownContent style={{ marginBottom: images.length ? 12 : 8 }}>{annonce['pair:description']}</MarkdownContent>
           )}
           {images.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
+            <div style={{ marginBottom: 8 }} data-no-card-link>
               <ImageGallery images={images} />
             </div>
           )}
