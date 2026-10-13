@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button, Empty, Input, Spin, Typography } from 'antd';
 import { ArrowLeftOutlined, SendOutlined } from '@ant-design/icons';
 import { useGetIdentity, useTranslate } from '@refinedev/core';
@@ -21,7 +21,7 @@ const AnnonceListPage = () => {
   const translate = useTranslate();
   const { data: identity } = useGetIdentity<Identity>();
   const { openComposer } = useComposer();
-  const { showContent, showSidebar } = useMobileNav();
+  const { showSidebar } = useMobileNav();
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const { items, isLoading } = useAnnonces();
@@ -29,13 +29,6 @@ const AnnonceListPage = () => {
 
   const filter = (searchParams.get('filter') as FilterId) || 'all';
   const filtered = items.filter(a => matchesFilter(a, filter, identity?.id));
-
-  // Reaching this page directly with a filter already applied (e.g. a page reload) should still
-  // show content rather than the mobile categories home — see `MobileNavContext`.
-  useEffect(() => {
-    if (searchParams.get('filter')) showContent();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const startAnnonce = () => {
     const title = draft;
