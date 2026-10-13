@@ -381,7 +381,13 @@ const AnnonceComposer = ({ open, mode, kind: initialKind, annonce, initialTitle,
   };
 
   const primaryLabel = translate(
-    !isLastStep ? 'composer.next' : mode === 'create' ? 'composer.send' : 'composer.save'
+    !isLastStep
+      ? 'composer.next'
+      : mode === 'create'
+        ? 'composer.send'
+        : mode === 'share'
+          ? 'composer.share'
+          : 'composer.save'
   );
   const onPrimary = !isLastStep ? goNext : submit;
 
