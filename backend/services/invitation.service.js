@@ -1,12 +1,12 @@
-const { ACTIVITY_TYPES, OBJECT_TYPES } = require('@semapps/activitypub');
+const { ACTIVITY_TYPES } = require('@semapps/activitypub');
 const { PodActivitiesHandlerMixin } = require('@activitypods/app');
 const { arrayOf } = require('@semapps/ldp');
 
 /**
- * Sends a push notification when an offer/request/announcement is shared (`Announce`), or replied to
- * (`Create{Note, inReplyTo}`). Visibility itself (ACL grant + attaching the resource to the
- * recipient's own container, or public read for comments — see `useComments`' `AS_PUBLIC`) is
- * already handled elsewhere — this only adds the friendly notification.
+ * Sends a push notification when an offer/request/announcement is shared (`Announce`). Visibility
+ * itself (ACL grant + attaching the resource to the recipient's own container) is already handled
+ * elsewhere — this only adds the friendly notification. Comments (`Create{Note, inReplyTo}`) are
+ * notified by the creator's Pod, like any direct message — see `useComments`.
  */
 module.exports = {
   name: 'invitation',
@@ -28,8 +28,8 @@ module.exports = {
           await ctx.call('pod-notifications.send', {
             template: {
               title: {
-                en: `{{emitterProfile.vcard:given-name}} shared an offer with you`,
-                fr: `{{emitterProfile.vcard:given-name}} vous a partagé une offre`
+                en: `{{{emitterProfile.vcard:given-name}}} shared an offer with you`,
+                fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une offre`
               },
               actions: [
                 {
@@ -61,8 +61,8 @@ module.exports = {
           await ctx.call('pod-notifications.send', {
             template: {
               title: {
-                en: `{{emitterProfile.vcard:given-name}} shared a request with you`,
-                fr: `{{emitterProfile.vcard:given-name}} vous a partagé une demande`
+                en: `{{{emitterProfile.vcard:given-name}}} shared a request with you`,
+                fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une demande`
               },
               actions: [
                 {
@@ -94,8 +94,8 @@ module.exports = {
           await ctx.call('pod-notifications.send', {
             template: {
               title: {
-                en: `{{emitterProfile.vcard:given-name}} shared an announcement with you`,
-                fr: `{{emitterProfile.vcard:given-name}} vous a partagé une annonce`
+                en: `{{{emitterProfile.vcard:given-name}}} shared an announcement with you`,
+                fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une annonce`
               },
               actions: [
                 {
@@ -109,52 +109,6 @@ module.exports = {
             recipientUri
           });
         }
-      }
-    },
-    comment: {
-      match: {
-        type: ACTIVITY_TYPES.CREATE,
-        object: {
-          type: OBJECT_TYPES.NOTE
-        }
-      },
-      // Fires on the ad creator's own Pod when they receive a comment in their inbox (comments
-      // are addressed `to: [creator, AS_PUBLIC]` — see `useComments`), so `recipientUri` here is
-      // always the ad's creator.
-      async onReceive(ctx, activity, recipientUri) {
-        const annonceUri = activity.object.inReplyTo;
-        if (!annonceUri || activity.actor === recipientUri) return;
-
-        const { ok, body: annonce } = await ctx.call('pod-resources.get', {
-          resourceUri: annonceUri,
-          actorUri: recipientUri
-        });
-        if (!ok) return;
-
-        const types = arrayOf(annonce.type);
-        const kind = types.includes('maid:Request') ? 'request' : types.includes('maid:Announcement') ? 'announcement' : 'offer';
-        const annonceTitle = annonce['pair:label'] || '';
-
-        await ctx.call('pod-notifications.send', {
-          template: {
-            title: {
-              en: `{{emitterProfile.vcard:given-name}} replied to your ad {{annonceTitle}}`,
-              fr: `{{emitterProfile.vcard:given-name}} a répondu à votre petite annonce {{annonceTitle}}`
-            },
-            content: '{{activity.object.summary}}',
-            actions: [
-              {
-                caption: { en: 'View', fr: 'Voir' },
-                link: `/annonces/${kind}/{{encodeUri annonceUri}}`
-              }
-            ]
-          },
-          activity,
-          annonceUri,
-          annonceTitle,
-          context: annonceUri,
-          recipientUri
-        });
       }
     }
   }

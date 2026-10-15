@@ -96,7 +96,9 @@
   },
   "comments": {
     "empty": "No comments yet",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "notification_title": "{{name}} replied to your ad {{title}}",
+    "notification_link": "View the ad"
   },
   "poster": {
     "member_since": "Member since {{date}}",

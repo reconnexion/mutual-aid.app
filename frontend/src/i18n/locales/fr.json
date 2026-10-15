@@ -96,7 +96,9 @@
   },
   "comments": {
     "empty": "Aucun commentaire pour le moment",
-    "sending": "Envoi…"
+    "sending": "Envoi…",
+    "notification_title": "{{name}} a répondu à votre petite annonce {{title}}",
+    "notification_link": "Voir l'annonce"
   },
   "poster": {
     "member_since": "Membre depuis le {{date}}",

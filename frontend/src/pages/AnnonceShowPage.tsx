@@ -42,7 +42,7 @@ const AnnonceShowPage = () => {
     queryOptions: { enabled: !!kind && !!id }
   });
   const { data: author } = useActorProfile(annonce?.['dc:creator']);
-  const { replies, isLoading: repliesLoading, send } = useComments(annonce || ({} as AnnonceRecord));
+  const { replies, isLoading: repliesLoading, send } = useComments(annonce || ({} as AnnonceRecord), kind!);
   const { items: announcers, isSuccess: announcersLoaded } = useActivityCollection<string>(annonce?.['apods:announcers']);
   const mine = !!annonce && annonce['dc:creator'] === identity?.id;
   const canShare = mine || (announcersLoaded && !!identity && announcers.includes(identity.id));
