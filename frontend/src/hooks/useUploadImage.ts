@@ -3,12 +3,13 @@ import { fetchJson, resolveContainerUri } from '@activitypods/refine-providers/u
 
 import { authProvider } from '../providers';
 import { grantPublicRead } from '../utils/grantPublicRead';
+import { compressImage } from '../utils/compressImage';
 
 /** Upload a raw file to the user's Pod, returning its URL — used for an ad's photos. Grants
  *  public read right after upload so the photos show up for whoever the ad gets shared with
  *  (see `grantPublicRead`'s doc comment for why that isn't automatic here). */
 const useUploadImage = () => {
-  return useCallback(async (file: File): Promise<string> => {
+  return useCallback(async (rawFile: File): Promise<string> => {
     const session = authProvider.getSession();
     if (!session) throw new Error('Not authenticated');
 
@@ -20,6 +21,7 @@ const useUploadImage = () => {
       ['https://www.w3.org/ns/activitystreams']
     );
 
+    const file = await compressImage(rawFile);
     const { headers } = await fetchJson(
       containerUri,
       { method: 'POST', body: file, headers: { 'Content-Type': file.type } },
