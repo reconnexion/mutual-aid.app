@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { arrayOf, fetchJson } from '@activitypods/refine-providers/utils';
+import { arrayOf, fetchWithSession } from '@activitypods/refine-providers/utils';
 
 import { authProvider } from '../providers';
 
@@ -22,7 +22,7 @@ const useActivityCollection = <T = any,>(collectionUri?: string) => {
     queryFn: async () => {
       let json;
       try {
-        ({ json } = await fetchJson(collectionUri!, {}, session?.token));
+        ({ json } = await fetchWithSession(collectionUri!, {}, session));
       } catch (e: any) {
         if (e.status === 404) return [];
         throw e;
@@ -31,7 +31,7 @@ const useActivityCollection = <T = any,>(collectionUri?: string) => {
       if ((json.type === 'OrderedCollection' || json.type === 'Collection') && json.first) {
         const firstItems = json.first?.items || json.first?.orderedItems;
         if (!firstItems) {
-          ({ json } = await fetchJson(typeof json.first === 'string' ? json.first : json.first.id, {}, session?.token));
+          ({ json } = await fetchWithSession(typeof json.first === 'string' ? json.first : json.first.id, {}, session));
         } else {
           json = json.first;
         }

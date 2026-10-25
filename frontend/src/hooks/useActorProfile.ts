@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useOne } from '@refinedev/core';
-import { fetchJson } from '@activitypods/refine-providers/utils';
+import { fetchWithSession } from '@activitypods/refine-providers/utils';
 
 import { authProvider } from '../providers';
 import type { ProfileRecord } from '../types';
@@ -14,7 +14,7 @@ const useActorProfile = (webId?: string) => {
   const actorQuery = useQuery({
     queryKey: ['actor', webId],
     queryFn: async () => {
-      const { json } = await fetchJson(webId!, {}, session?.token);
+      const { json } = await fetchWithSession(webId!, {}, session);
       return json as Record<string, any>;
     },
     enabled: !!webId,
