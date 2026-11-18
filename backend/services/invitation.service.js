@@ -8,108 +8,58 @@ const { arrayOf } = require('@semapps/ldp');
  * elsewhere — this only adds the friendly notification. Comments (`Create{Note, inReplyTo}`) are
  * notified by the creator's Pod, like any direct message — see `useComments`.
  */
+
+const TITLES = {
+  offer: {
+    en: `{{{emitterProfile.vcard:given-name}}} shared an offer with you`,
+    fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une offre`
+  },
+  request: {
+    en: `{{{emitterProfile.vcard:given-name}}} shared a request with you`,
+    fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une demande`
+  },
+  announcement: {
+    en: `{{{emitterProfile.vcard:given-name}}} shared an announcement with you`,
+    fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une annonce`
+  }
+};
+
+const shareHandler = (type, kind) => ({
+  match: {
+    type: ACTIVITY_TYPES.ANNOUNCE,
+    object: { type }
+  },
+  async onEmit(ctx, activity) {
+    // Delegates' Announces are checked by the Pod provider against apods:announcers
+    for (const recipientUri of arrayOf(activity.to)) {
+      try {
+        await ctx.call('pod-notifications.send', {
+          template: {
+            title: TITLES[kind],
+            actions: [
+              {
+                caption: { en: 'View', fr: 'Voir' },
+                link: `/annonces/${kind}/{{encodeUri activity.object.id}}`
+              }
+            ]
+          },
+          activity,
+          context: activity.object.id,
+          recipientUri
+        });
+      } catch (e) {
+        this.logger.warn(`Could not notify ${recipientUri} of ${activity.id}: ${e.message}`);
+      }
+    }
+  }
+});
+
 module.exports = {
   name: 'invitation',
   mixins: [PodActivitiesHandlerMixin],
   activities: {
-    shareOffer: {
-      match: {
-        type: ACTIVITY_TYPES.ANNOUNCE,
-        object: {
-          type: 'maid:Offer'
-        }
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        if (emitterUri !== activity.object['dc:creator']) {
-          throw new Error('Only the creator has the right to share the offer ' + activity.object.id);
-        }
-
-        for (const recipientUri of arrayOf(activity.target)) {
-          await ctx.call('pod-notifications.send', {
-            template: {
-              title: {
-                en: `{{{emitterProfile.vcard:given-name}}} shared an offer with you`,
-                fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une offre`
-              },
-              actions: [
-                {
-                  caption: { en: 'View', fr: 'Voir' },
-                  link: '/annonces/offer/{{encodeUri activity.object.id}}'
-                }
-              ]
-            },
-            activity,
-            context: activity.object.id,
-            recipientUri
-          });
-        }
-      }
-    },
-    shareRequest: {
-      match: {
-        type: ACTIVITY_TYPES.ANNOUNCE,
-        object: {
-          type: 'maid:Request'
-        }
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        if (emitterUri !== activity.object['dc:creator']) {
-          throw new Error('Only the creator has the right to share the request ' + activity.object.id);
-        }
-
-        for (const recipientUri of arrayOf(activity.target)) {
-          await ctx.call('pod-notifications.send', {
-            template: {
-              title: {
-                en: `{{{emitterProfile.vcard:given-name}}} shared a request with you`,
-                fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une demande`
-              },
-              actions: [
-                {
-                  caption: { en: 'View', fr: 'Voir' },
-                  link: '/annonces/request/{{encodeUri activity.object.id}}'
-                }
-              ]
-            },
-            activity,
-            context: activity.object.id,
-            recipientUri
-          });
-        }
-      }
-    },
-    shareAnnouncement: {
-      match: {
-        type: ACTIVITY_TYPES.ANNOUNCE,
-        object: {
-          type: 'maid:Announcement'
-        }
-      },
-      async onEmit(ctx, activity, emitterUri) {
-        if (emitterUri !== activity.object['dc:creator']) {
-          throw new Error('Only the creator has the right to share the announcement ' + activity.object.id);
-        }
-
-        for (const recipientUri of arrayOf(activity.target)) {
-          await ctx.call('pod-notifications.send', {
-            template: {
-              title: {
-                en: `{{{emitterProfile.vcard:given-name}}} shared an announcement with you`,
-                fr: `{{{emitterProfile.vcard:given-name}}} vous a partagé une annonce`
-              },
-              actions: [
-                {
-                  caption: { en: 'View', fr: 'Voir' },
-                  link: '/annonces/announcement/{{encodeUri activity.object.id}}'
-                }
-              ]
-            },
-            activity,
-            context: activity.object.id,
-            recipientUri
-          });
-        }
-      }
-    }
+    shareOffer: shareHandler('maid:Offer', 'offer'),
+    shareRequest: shareHandler('maid:Request', 'request'),
+    shareAnnouncement: shareHandler('maid:Announcement', 'announcement')
   }
 };
